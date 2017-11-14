@@ -11,38 +11,41 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.PopupMenu;
 
-import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+
+import ru.spbau.mit.telsc.model.Sticker;
 
 public class MainActivity extends AppCompatActivity {
     public static final int PICK_IMAGE = 1;
 
-    private Bitmap sticker;
+    private Sticker sticker;
+    private ArrayList<Sticker.Actions> savedTemplate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final Button chooseImageButton = (Button) findViewById(R.id.chooseImageButton);
-        chooseImageButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent intent = new Intent();
-                intent.setType("image/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
-            }
+        final Button chooseImageButton = (Button) findViewById(R.id.selectImage);
+        chooseImageButton.setOnClickListener(v -> {
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
         });
 
         final Button uploadStickerButton = (Button) findViewById(R.id.uploadSticker);
-        uploadStickerButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                sticker.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                byte[] byteArray = stream.toByteArray();
-                /* Vova, your code here. I suggest you create another class for this aims. */
-            }
+        uploadStickerButton.setOnClickListener(v -> {
+            byte[] byteArray = sticker.getRawData();
+            /* Vova, your code here. I suggest you create another class for this aims. */
         });
+
+        final Button grayScalingFilter = (Button) findViewById(R.id.edit);
+        grayScalingFilter.setOnClickListener(this::showPopupMenu);
+
+        final Button templatesDatabase = (Button) findViewById(R.id.templatesDatabase);
+        templatesDatabase.setOnClickListener(v -> savedTemplate = sticker.getTemplate());
     }
 
     @Override
@@ -51,22 +54,72 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == PICK_IMAGE) {
             Uri pickedImage = data.getData();
-            String[] filePath = { MediaStore.Images.Media.DATA };
-            Cursor cursor = getContentResolver().query(pickedImage, filePath, null, null, null);
-            cursor.moveToFirst();
-            String imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]));
+            if (pickedImage != null) {
+                String[] filePath = { MediaStore.Images.Media.DATA };
+                Cursor cursor = getContentResolver().query(pickedImage, filePath, null, null, null);
+                cursor.moveToFirst();
+                String imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]));
 
-            final TextView selectedImagePath = (TextView) findViewById(R.id.selectedImagePath);
-            selectedImagePath.setText(imagePath);
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                Bitmap bitmap = BitmapFactory.decodeFile(imagePath, options);
+                bitmap = Bitmap.createScaledBitmap(bitmap, 512, 512, false);
+                sticker = new Sticker(bitmap);
 
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-            Bitmap bitmap = BitmapFactory.decodeFile(imagePath, options);
-            sticker = Bitmap.createScaledBitmap(bitmap, 512, 512, false);
-            final ImageView stickerImageView = (ImageView) findViewById(R.id.imageView);
-            stickerImageView.setImageBitmap(sticker);
-
-            cursor.close();
+                updateImageView();
+                cursor.close();
+            }
         }
+    }
+
+    private void updateImageView() {
+        final ImageView stickerImageView = (ImageView) findViewById(R.id.stickerImageView);
+        stickerImageView.setImageBitmap(sticker.getStickerImage());
+    }
+
+    private void showPopupMenu(View v) {
+        PopupMenu popupMenu = new PopupMenu(this, v);
+        popupMenu.inflate(R.menu.popupmenu);
+
+        popupMenu.setOnMenuItemClickListener(item -> {
+                    Sticker.Actions action = null;
+
+                    switch (item.getItemId()) {
+                        case R.id.loadTemplate:
+                            ArrayList<Sticker.Actions> loadedTemplate = savedTemplate;
+                            sticker.applyActions(loadedTemplate);
+                            break;
+                        case R.id.line:
+                            //Drawing Line Mode
+                            break;
+                        case R.id.crop:
+                            //Crop Mode
+                            break;
+                        case R.id.eraser:
+                            //Eraser Mode
+                            break;
+                        case R.id.rotate:
+                            action = Sticker.Actions.ROTATION_90_DEGREES_CLOCKWISE;
+                            break;
+                        // Filters part
+                        case R.id.grayScaling:
+                            action = Sticker.Actions.GRAY_SCALING;
+                            break;
+                        case R.id.blur:
+                            //Blur filter
+                            break;
+                        case R.id.gauss:
+                            //Gauss filter
+                            break;
+                        default:
+                            return false;
+                    }
+                    if (action != null)
+                        sticker.applyAction(action);
+                    updateImageView();
+                    return true;
+                });
+
+        popupMenu.show();
     }
 }

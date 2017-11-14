@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">TelSC</string>
+    <string name="load_template">Load Template</string>
+    <string name="line">Line</string>
+    <string name="crop">Crop</string>
+    <string name="eraser">Eraser</string>
+    <string name="rotate">Rotate</string>
+    <string name="filters">Filters</string>
+    <string name="gray_scaling">Gray Scaling</string>
+    <string name="blur">Blur</string>
+    <string name="gauss">Gauss</string>
+    <string name="current_sticker">Current sticker</string>
+    <string name="templates_database">Templates Database</string>
+    <string name="select_image">Select Image</string>
+    <string name="edit">Edit</string>
+    <string name="upload">Upload</string>
 </resources>
