@@ -1,4 +1,3 @@
 # TelSC
 Telegram stickers creator
-
-!https://travis-ci.org/vladimirrim/TelSC.svg?branch=master!:https://travis-ci.org/vladimirrim/TelSC
+[![Build Status](https://travis-ci.org/vladimirrim/TelSC.svg?branch=master)](https://travis-ci.org/vladimirrim/TelSC)
