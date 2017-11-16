@@ -1,21 +1,27 @@
 package ru.spbau.mit.telsc;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 
+import org.telegram.telegrambots.bots.DefaultBotOptions;
+
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 
 import ru.spbau.mit.telsc.model.Sticker;
+import ru.spbau.mit.telsc.telegramManager.TelegramManager;
 
 public class MainActivity extends AppCompatActivity {
     public static final int PICK_IMAGE = 1;
@@ -38,7 +44,17 @@ public class MainActivity extends AppCompatActivity {
         final Button uploadStickerButton = (Button) findViewById(R.id.uploadSticker);
         uploadStickerButton.setOnClickListener(v -> {
             byte[] byteArray = sticker.getRawData();
-            /* Vova, your code here. I suggest you create another class for this aims. */
+            TelegramManager manager = new TelegramManager(new DefaultBotOptions());
+            SharedPreferences sp = getSharedPreferences("numberStorage", Activity.MODE_PRIVATE);
+            int currentStickerNumber = sp.getInt("number", 6);
+            try {
+                manager.createSticker(new ByteArrayInputStream(byteArray), currentStickerNumber);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            SharedPreferences.Editor editor = sp.edit();
+            editor.putInt("number", currentStickerNumber + 1);
+            editor.apply();
         });
 
         final Button grayScalingFilter = (Button) findViewById(R.id.edit);
@@ -55,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == PICK_IMAGE) {
             Uri pickedImage = data.getData();
             if (pickedImage != null) {
-                String[] filePath = { MediaStore.Images.Media.DATA };
+                String[] filePath = {MediaStore.Images.Media.DATA};
                 Cursor cursor = getContentResolver().query(pickedImage, filePath, null, null, null);
                 cursor.moveToFirst();
                 String imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]));
@@ -82,43 +98,43 @@ public class MainActivity extends AppCompatActivity {
         popupMenu.inflate(R.menu.popupmenu);
 
         popupMenu.setOnMenuItemClickListener(item -> {
-                    Sticker.Actions action = null;
+            Sticker.Actions action = null;
 
-                    switch (item.getItemId()) {
-                        case R.id.loadTemplate:
-                            ArrayList<Sticker.Actions> loadedTemplate = savedTemplate;
-                            sticker.applyActions(loadedTemplate);
-                            break;
-                        case R.id.line:
-                            //Drawing Line Mode
-                            break;
-                        case R.id.crop:
-                            //Crop Mode
-                            break;
-                        case R.id.eraser:
-                            //Eraser Mode
-                            break;
-                        case R.id.rotate:
-                            action = Sticker.Actions.ROTATION_90_DEGREES_CLOCKWISE;
-                            break;
-                        // Filters part
-                        case R.id.grayScaling:
-                            action = Sticker.Actions.GRAY_SCALING;
-                            break;
-                        case R.id.blur:
-                            //Blur filter
-                            break;
-                        case R.id.gauss:
-                            //Gauss filter
-                            break;
-                        default:
-                            return false;
-                    }
-                    if (action != null)
-                        sticker.applyAction(action);
-                    updateImageView();
-                    return true;
-                });
+            switch (item.getItemId()) {
+                case R.id.loadTemplate:
+                    ArrayList<Sticker.Actions> loadedTemplate = savedTemplate;
+                    sticker.applyActions(loadedTemplate);
+                    break;
+                case R.id.line:
+                    //Drawing Line Mode
+                    break;
+                case R.id.crop:
+                    //Crop Mode
+                    break;
+                case R.id.eraser:
+                    //Eraser Mode
+                    break;
+                case R.id.rotate:
+                    action = Sticker.Actions.ROTATION_90_DEGREES_CLOCKWISE;
+                    break;
+                // Filters part
+                case R.id.grayScaling:
+                    action = Sticker.Actions.GRAY_SCALING;
+                    break;
+                case R.id.blur:
+                    //Blur filter
+                    break;
+                case R.id.gauss:
+                    //Gauss filter
+                    break;
+                default:
+                    return false;
+            }
+            if (action != null)
+                sticker.applyAction(action);
+            updateImageView();
+            return true;
+        });
 
         popupMenu.show();
     }
