@@ -21,7 +21,7 @@ captures/
 output.json #Since Android Studio 3.0
 
 # Package Files #
-*.jar
+#*.jar
 *.war
 *.ear
 *.zip
@@ -30,3 +30,13 @@ output.json #Since Android Studio 3.0
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+*.iml
+
+/out/*
+/.idea/uiDesigner.xml
+/.idea/workspace.xml
+/.idea/description.xml
+/.gradle/*
+/build/*
+local.properties
