@@ -1,14 +1,12 @@
-package ru.spbau.mit.telsc;
+package ru.spbau.mit.telsc.view;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -23,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+import ru.spbau.mit.telsc.R;
 import ru.spbau.mit.telsc.model.Sticker;
 import ru.spbau.mit.telsc.telegramManager.TelegramManager;
 
