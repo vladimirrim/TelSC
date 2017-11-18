@@ -14,10 +14,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.Toast;
 
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import ru.spbau.mit.telsc.model.Sticker;
@@ -35,9 +38,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         final Button chooseImageButton = (Button) findViewById(R.id.selectImage);
         chooseImageButton.setOnClickListener(v -> {
-            Intent intent = new Intent();
+
+            Intent intent = new Intent(Intent.ACTION_PICK);
             intent.setType("image/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
             startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
         });
 
@@ -69,23 +72,23 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == PICK_IMAGE) {
-            Uri pickedImage = data.getData();
-            if (pickedImage != null) {
-                String[] filePath = {MediaStore.Images.Media.DATA};
-                Cursor cursor = getContentResolver().query(pickedImage, filePath, null, null, null);
-                cursor.moveToFirst();
-                String imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]));
 
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-                Bitmap bitmap = BitmapFactory.decodeFile(imagePath, options);
-                bitmap = Bitmap.createScaledBitmap(bitmap, 512, 512, false);
-                sticker = new Sticker(bitmap);
-
-                updateImageView();
-                cursor.close();
+            try {
+                final Uri imageUri = data.getData();
+                final InputStream imageStream = getContentResolver().openInputStream(imageUri);
+                Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+                selectedImage = Bitmap.createScaledBitmap(selectedImage, 512, 512, false);
+                ((ImageView) findViewById(R.id.stickerImageView)).setImageBitmap(selectedImage);
+                sticker = new Sticker(selectedImage);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                Toast.makeText(MainActivity.this, "Something went wrong", Toast.LENGTH_LONG).show();
             }
+
+        } else {
+            Toast.makeText(MainActivity.this, "You haven't picked Image", Toast.LENGTH_LONG).show();
         }
+
     }
 
     private void updateImageView() {
