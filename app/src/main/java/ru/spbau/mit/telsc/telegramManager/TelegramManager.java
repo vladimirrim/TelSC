@@ -16,6 +16,7 @@ import org.telegram.telegrambots.api.methods.stickers.CreateNewStickerSet;
 import org.telegram.telegrambots.bots.DefaultAbsSender;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
+
 import ru.spbau.mit.telsc.telegramManager.core.*;
 
 import java.io.IOException;
@@ -29,29 +30,28 @@ public class TelegramManager extends DefaultAbsSender {
     }
 
 
-    private TLSentCode sendCode(String phone) throws TimeoutException, RpcException {
+    public void sendCode(String phone) throws TimeoutException, RpcException {
         TLRequestAuthSendCode code = new TLRequestAuthSendCode();
         code.setApiHash(APIHASH);
         code.setApiId(APIID);
         code.setPhoneNumber(phone);
-        return api.doRpcCallNonAuth(code);
+        phoneHash = api.doRpcCallNonAuth(code).getPhoneCodeHash();
     }
 
-    private TLAuthorization auth(String phone, TLSentCode sentCode, String smsCode) throws TimeoutException, RpcException {
+    public int auth(String phone, String smsCode) throws TimeoutException, RpcException {
         TLRequestAuthSignIn sign = new TLRequestAuthSignIn();
         sign.setPhoneCode(smsCode);
-        sign.setPhoneCodeHash(sentCode.getPhoneCodeHash());
+        sign.setPhoneCodeHash(phoneHash);
         sign.setPhoneNumber(phone);
-        return api.doRpcCallNonAuth(sign);
+        return api.doRpcCallNonAuth(sign).getUser().getId();
     }
 
-    public void createSticker(InputStream pngSticker, int currentStickerNumber, String phone) throws IOException, TelegramApiException {
+    public void createSticker(InputStream pngSticker, int currentStickerNumber, int userId) throws IOException, TelegramApiException {
         TelegramManager manager = new TelegramManager(new DefaultBotOptions());
         CreateNewStickerSet creator = new CreateNewStickerSet();
 
 
-
-        /*creator.setPngStickerStream("stickerSet" + currentStickerNumber + "_by_StickersCreatorBot", pngSticker);
+        creator.setPngStickerStream("stickerSet" + currentStickerNumber + "_by_StickersCreatorBot", pngSticker);
         creator.setName("stickerSet" + currentStickerNumber + "_by_StickersCreatorBot");
         creator.setUserId(userId);
         creator.setTitle("yourStickerName");
@@ -61,19 +61,19 @@ public class TelegramManager extends DefaultAbsSender {
         SendMessage message = new SendMessage();
         message.setChatId((long) userId);
         message.setText("t.me/addstickers/" + creator.getName());
-        manager.sendMessage(message);*/
+        manager.sendMessage(message);
     }
 
     private TelegramApi api = new TelegramApi(new MemoryApiState("149.154.167.50:443"), new AppInfo(APIID, "Android", "1.0",
             "0.2", "en"), new ApiCallback() {
         @Override
         public void onAuthCancelled(TelegramApi api) {
-            Log.w(LOG,"auth cancelled");
+            Log.w(LOG, "auth cancelled");
         }
 
         @Override
         public void onUpdatesInvalidated(TelegramApi api) {
-            Log.w(LOG,"updates invalidated");
+            Log.w(LOG, "updates invalidated");
         }
 
         @Override
@@ -85,6 +85,7 @@ public class TelegramManager extends DefaultAbsSender {
     private static final String LOG = "TelegramManager";
     static final private int APIID = 124211;
     static final private String APIHASH = "eab4b49dc43c47ea4feb57631a42b07d";
+    private String phoneHash;
 
     @Override
     public String getBotToken() {

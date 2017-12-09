@@ -46,22 +46,9 @@ public class MainActivity extends AppCompatActivity {
         final Button uploadStickerButton = (Button) findViewById(R.id.uploadSticker);
         uploadStickerButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, PhoneActivity.class);
-            /*EditText editText = (EditText) findViewById(R.id.);
-            String message = editText.getText().toString();
-            intent.putExtra(EXTRA_MESSAGE, message);*/
+            byte[] byteArray = sticker.getRawData();
+            intent.putExtra("sticker",byteArray);
             startActivity(intent);
-            /*byte[] byteArray = sticker.getRawData();
-            TelegramManager manager = new TelegramManager(new DefaultBotOptions());
-            SharedPreferences sp = getSharedPreferences("numberStorage", Activity.MODE_PRIVATE);
-            int currentStickerNumber = sp.getInt("number", 6);
-            try {
-                manager.createSticker(new ByteArrayInputStream(byteArray), currentStickerNumber);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            SharedPreferences.Editor editor = sp.edit();
-            editor.putInt("number", currentStickerNumber + 1);
-            editor.apply();*/
         });
 
         final Button grayScalingFilter = (Button) findViewById(R.id.edit);
