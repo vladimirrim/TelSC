@@ -32,10 +32,17 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
     compile "cz.msebera.android:httpclient:4.4.1.2"
-    compile (
+    // https://mvnrepository.com/artifact/org.jetbrains/annotations
+    compile group: 'org.jetbrains', name: 'annotations', version: '15.0'
+
+    compile(
             [group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.4.1'],
             [group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.4.1'],
             [group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.4.1']
     )
+    compile ('com.lamudi.phonefield:phone-field:0.1.3@aar') {
+        transitive = true
+    }
+
     compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
 }
