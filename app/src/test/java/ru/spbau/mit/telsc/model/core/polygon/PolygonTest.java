@@ -9,6 +9,7 @@ import static org.junit.Assert.*;
 /**
  * Created by mikhail on 30.11.17.
  */
+
 public class PolygonTest {
     @Test
     public void addPoint() throws Exception {
