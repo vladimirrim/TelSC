@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/TelSC.iml" filepath="$PROJECT_DIR$/TelSC.iml" />
+      <module fileurl="file://C:\ThatsAmazing\projects\TelSC\TelSC.iml" filepath="C:\ThatsAmazing\projects\TelSC\TelSC.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\ThatsAmazing\projects\TelSC\app\app.iml" filepath="C:\ThatsAmazing\projects\TelSC\app\app.iml" />
     </modules>
   </component>
 </project>
