@@ -19,7 +19,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".view.PhoneActivity" />
-        <activity android:name=".view.CodeActivity"></activity>
+        <activity android:name=".view.CodeActivity" />
+        <activity android:name=".view.StickerNameDownloadActivity" />
+        <activity android:name=".view.DatabaseActivity" />
+        <activity android:name=".view.StickerNameUploadActivity"></activity>
     </application>
 
 </manifest>
