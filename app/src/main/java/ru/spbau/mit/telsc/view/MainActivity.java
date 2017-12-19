@@ -1,8 +1,7 @@
 package ru.spbau.mit.telsc.view;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -14,16 +13,15 @@ import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
-import org.telegram.telegrambots.bots.DefaultBotOptions;
-
-import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 
 import ru.spbau.mit.telsc.R;
+import ru.spbau.mit.telsc.databaseManager.DatabaseManager;
 import ru.spbau.mit.telsc.model.Sticker;
-import ru.spbau.mit.telsc.telegramManager.TelegramManager;
 
 public class MainActivity extends AppCompatActivity {
     public static final int PICK_IMAGE = 1;
@@ -46,16 +44,34 @@ public class MainActivity extends AppCompatActivity {
         final Button uploadStickerButton = (Button) findViewById(R.id.uploadSticker);
         uploadStickerButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, PhoneActivity.class);
-            byte[] byteArray = sticker.getRawData();
-            intent.putExtra("sticker",byteArray);
+            intent.putExtra("stickerName", saveStickerInFile(sticker.getStickerImage()) );
+            startActivity(intent);
+        });
+
+        final Button stickersDatabaseButton = findViewById(R.id.stickersDatabase);
+        stickersDatabaseButton.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, DatabaseActivity.class);
+            intent.putExtra("stickerName", saveStickerInFile(sticker.getStickerImage()));
             startActivity(intent);
         });
 
         final Button grayScalingFilter = (Button) findViewById(R.id.edit);
         grayScalingFilter.setOnClickListener(this::showPopupMenu);
 
+        DatabaseManager db = new DatabaseManager();
+
         final Button templatesDatabase = (Button) findViewById(R.id.templatesDatabase);
-        templatesDatabase.setOnClickListener(v -> savedTemplate = sticker.getTemplate());
+        templatesDatabase.setOnClickListener(v -> {
+            try {
+                Bitmap bitmap = BitmapFactory.decodeStream(this.openFileInput("newSticker"));
+                final ImageView stickerImageView = findViewById(R.id.stickerImageView);
+                stickerImageView.setImageBitmap(bitmap);
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+                /*savedTemplate = sticker.getTemplate()*/
+        });
     }
 
     @Override
@@ -80,6 +96,23 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+    private String saveStickerInFile(Bitmap bitmap) {
+        String fileName = "sticker";
+        try {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+            FileOutputStream fo = openFileOutput(fileName, Context.MODE_PRIVATE);
+            fo.write(bytes.toByteArray());
+            // remember close file output
+            fo.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            fileName = null;
+        }
+        return fileName;
+    }
+
 
     private void updateImageView() {
         final ImageView stickerImageView = (ImageView) findViewById(R.id.stickerImageView);

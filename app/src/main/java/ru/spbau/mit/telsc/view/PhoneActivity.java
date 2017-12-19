@@ -24,7 +24,7 @@ public class PhoneActivity extends AppCompatActivity {
         Intent oldIntent = getIntent();
 
         Intent intent = new Intent(this, CodeActivity.class);
-        intent.putExtra("sticker", oldIntent.getByteArrayExtra("sticker"));
+        intent.putExtra("stickerName", oldIntent.getStringExtra("stickerName"));
         EditText editText = findViewById(R.id.phoneNumber);
         editText.setOnKeyListener((v, keyCode, event) -> {
             if((event.getAction()== KeyEvent.ACTION_DOWN)&&
