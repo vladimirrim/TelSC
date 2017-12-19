@@ -19,7 +19,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".view.PhoneActivity" />
-        <activity android:name=".view.CodeActivity"></activity>
+        <activity android:name=".view.CodeActivity" />
+        <activity android:name=".view.ImageEditorActivity"></activity>
     </application>
 
 </manifest>

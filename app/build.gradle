@@ -10,6 +10,10 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        /* Don't forget these two lines, otherwise the app will crash! */
+        renderscriptTargetApi 23
+        renderscriptSupportModeEnabled true
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -35,19 +39,20 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
     compile "cz.msebera.android:httpclient:4.4.1.2"
-    // https://mvnrepository.com/artifact/org.jetbrains/annotations
-    compile group: 'org.jetbrains', name: 'annotations', version: '15.0'
 
     compile(
             [group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.4.1'],
             [group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.4.1'],
             [group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.4.1']
     )
-    compile ('com.lamudi.phonefield:phone-field:0.1.3@aar') {
+    compile('com.lamudi.phonefield:phone-field:0.1.3@aar') {
         transitive = true
     }
 
     compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
+
+    /* Make sure that you are importing the latest SDK version */
+    compile 'ly.img.android:photo-editor-sdk:5.0.8'
 
     // https://mvnrepository.com/artifact/org.mockito/mockito-core
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.1.0'
