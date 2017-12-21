@@ -53,6 +53,10 @@ dependencies {
 
     /* Make sure that you are importing the latest SDK version */
     compile 'ly.img.android:photo-editor-sdk:5.0.8'
+    compile 'com.google.firebase:firebase-core:11.6.2'
+    implementation 'com.google.firebase:firebase-database:11.6.2'
+    compile 'com.google.firebase:firebase-storage:11.6.2'
+    compile 'com.google.firebase:firebase-auth:11.6.2'
 
     // https://mvnrepository.com/artifact/org.mockito/mockito-core
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.1.0'
@@ -60,3 +64,5 @@ dependencies {
     // https://mvnrepository.com/artifact/org.jetbrains/annotations
     compile group: 'org.jetbrains', name: 'annotations', version: '15.0'
 }
+
+apply plugin: 'com.google.gms.google-services'

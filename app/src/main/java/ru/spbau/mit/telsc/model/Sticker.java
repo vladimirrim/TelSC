@@ -1,7 +1,13 @@
 package ru.spbau.mit.telsc.model;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.widget.ImageView;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -58,5 +64,39 @@ public class Sticker {
 
     public byte[] getRawData() {
         return stickerManager.getRawData();
+    }
+
+    public static String saveStickerInFile(Bitmap bitmap, Context context) {
+        String fileName = "sticker";
+        try {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+            FileOutputStream fo = context.openFileOutput(fileName, Context.MODE_PRIVATE);
+            fo.write(bytes.toByteArray());
+            // remember close file output
+            fo.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            fileName = null;
+        }
+        return fileName;
+    }
+
+    public static byte[] getRawData(ImageView imageView) {
+        Bitmap image = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
+        //image = Bitmap.createScaledBitmap(image, 512, 512, false);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        image.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        return stream.toByteArray();
+    }
+
+    public static Bitmap getStickerBitmap(ImageView imageView) {
+        Bitmap image = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
+        return Bitmap.createScaledBitmap(image, 512, 512, false);
+    }
+
+    public static Bitmap getStickerBitmap(String imagePath) {
+        Bitmap image = BitmapFactory.decodeFile(imagePath);
+        return Bitmap.createScaledBitmap(image, 512, 512, false);
     }
 }

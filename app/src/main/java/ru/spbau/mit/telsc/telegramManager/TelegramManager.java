@@ -78,7 +78,7 @@ public class TelegramManager extends DefaultAbsSender {
 
         @Override
         public void onUpdate(TLAbsUpdates updates) {
-            Log.w(LOG, "update");
+            Log.i(LOG, "update");
         }
     });
 

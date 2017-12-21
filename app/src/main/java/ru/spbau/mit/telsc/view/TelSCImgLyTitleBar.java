@@ -1,22 +1,12 @@
 package ru.spbau.mit.telsc.view;
 
-import android.app.ActionBar;
 import android.content.Context;
-import android.content.Intent;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 
-import java.nio.Buffer;
-
-import ly.img.android.sdk.views.EditorPreview;
-import ly.img.android.ui.widgets.EditorRootView;
 import ly.img.android.ui.widgets.ImgLyTitleBar;
 import ru.spbau.mit.telsc.R;
-import ru.spbau.mit.telsc.view.imageView.ImageViewHelper;
 
 /**
  * Created by mikhail on 18.12.17.
@@ -46,10 +36,8 @@ public class TelSCImgLyTitleBar extends ImgLyTitleBar {
         final ImageButton uploadStickerButton = findViewById(R.id.uploadSticker);
         uploadStickerButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                final ImageView imageView = ((View) TelSCImgLyTitleBar.this.getParent()).findViewById(ly.img.android.R.id.image);
-                Intent intent = new Intent(v.getContext(), PhoneActivity.class);
-                intent.putExtra("sticker", ImageViewHelper.getRawData(imageView));
-                v.getContext().startActivity(intent); // v or ((View) TelSCImgLyTitleBar.this.getParent()) ??
+                ImageEditorActivity.buttonType = ImageEditorActivity.ButtonType.UPLOAD_STICKER_TO_TELEGRAM;
+                findViewById(R.id.acceptButton).callOnClick();
             }
         });
     }
@@ -58,7 +46,8 @@ public class TelSCImgLyTitleBar extends ImgLyTitleBar {
         final ImageButton uploadStickerToDBButton = findViewById(R.id.uploadStickerToDB);
         uploadStickerToDBButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                // TODO: upload sticker to database button is pressed, realize logic
+                ImageEditorActivity.buttonType = ImageEditorActivity.ButtonType.UPLOAD_STICKER_TO_DB;
+                findViewById(R.id.acceptButton).callOnClick();
             }
         });
     }
