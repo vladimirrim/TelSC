@@ -42,8 +42,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        PESDK.init(this, "PhotoEditorSDKLICENSE");
-
         final Button chooseImageButton = (Button) findViewById(R.id.selectImage);
         chooseImageButton.setOnClickListener(v -> {
 
@@ -94,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
                 final Uri imageUri = data.getData();
 
                 Intent intent = new Intent(this, ImageEditorActivity.class);
-                intent.putExtra("pathToImage", getRealPathFromURI(this, imageUri));
+                //intent.putExtra("pathToImage", getRealPathFromURI(this, imageUri));
                 startActivity(intent);
 
                 final InputStream imageStream = getContentResolver().openInputStream(imageUri);
@@ -178,20 +176,5 @@ public class MainActivity extends AppCompatActivity {
         });
 
         popupMenu.show();
-    }
-
-    private String getRealPathFromURI(Context context, Uri contentUri) {
-        Cursor cursor = null;
-        try {
-            String[] proj = { MediaStore.Images.Media.DATA };
-            cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToFirst();
-            return cursor.getString(column_index);
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
     }
 }

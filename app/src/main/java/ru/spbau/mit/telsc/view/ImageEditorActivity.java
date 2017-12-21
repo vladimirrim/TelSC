@@ -2,18 +2,23 @@ package ru.spbau.mit.telsc.view;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.UUID;
 
 import ly.img.android.PESDK;
 import ly.img.android.sdk.models.constant.Directory;
+import ly.img.android.sdk.models.state.CameraSettings;
 import ly.img.android.sdk.models.state.EditorLoadSettings;
 import ly.img.android.sdk.models.state.EditorSaveSettings;
 import ly.img.android.sdk.models.state.manager.SettingsList;
+import ly.img.android.ui.activities.CameraPreviewBuilder;
 import ly.img.android.ui.activities.ImgLyIntent;
 import ly.img.android.ui.activities.PhotoEditorBuilder;
 import ly.img.android.ui.utilities.PermissionRequest;
@@ -37,11 +42,20 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
         Intent intent = getIntent();
 
         SettingsList settingsList = new SettingsList();
-        String myPicture = intent.getStringExtra("pathToImage");
-        settingsList
-                .getSettingsModel(EditorLoadSettings.class)
-                .setImageSourcePath(myPicture, true) // Load with delete protection true!
+        if (intent.hasExtra("pathToImage")) {
+            String myPicture = intent.getStringExtra("pathToImage");
 
+            settingsList
+                    .getSettingsModel(EditorLoadSettings.class)
+                    .setImageSourcePath(myPicture, true); // Load with delete protection true!
+        }
+        else {
+            settingsList
+                    .getSettingsModel(CameraSettings.class)
+                    .setExportDir(Directory.DCIM, FOLDER)
+                    .setExportPrefix("camera_");
+        }
+        settingsList
                 .getSettingsModel(EditorSaveSettings.class)
                 .setExportDir(Directory.DCIM, FOLDER)
                 .setExportPrefix("result_")
@@ -49,10 +63,16 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
                 .setSavePolicy(
                         EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT
                 );
-
-        new PhotoEditorBuilder(this)
-                .setSettingsList(settingsList)
-                .startActivityForResult(this, CAMERA_PREVIEW_RESULT);
+        if (intent.hasExtra("pathToImage")) {
+            new PhotoEditorBuilder(this)
+                    .setSettingsList(settingsList)
+                    .startActivityForResult(this, CAMERA_PREVIEW_RESULT);
+        }
+        else {
+            new CameraPreviewBuilder(this)
+                    .setSettingsList(settingsList)
+                    .startActivityForResult(this, CAMERA_PREVIEW_RESULT);
+        }
     }
 
     @Override
@@ -80,12 +100,7 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
                 case SAVE_STICKER_TO_PHONE:
                     if (resultPath != null) {
                         // Add result file to Gallery
-                        sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(resultPath))));
-                    }
-
-                    if (sourcePath != null) {
-                        // Add sourceType file to Gallery
-                        sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(sourcePath))));
+                        galleryAddPic(resultPath, UUID.randomUUID().toString(), "saved image from editor");
                     }
                     break;
                 default:
@@ -115,5 +130,20 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
     public void permissionDenied() {
         // The Permission was rejected by the user. The Editor was not opened, as it could not save the result image.
         // TODO for you: Show a Hint to the User
+    }
+
+    private void galleryAddPic(String currentPhotoPath, String name, String description) {
+        /*
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(currentPhotoPath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        this.sendBroadcast(mediaScanIntent);
+        */
+        try {
+            MediaStore.Images.Media.insertImage(getContentResolver(), currentPhotoPath, name, description);
+        } catch (FileNotFoundException e) {
+            Toast.makeText(PESDK.getAppContext(), "File not found, image wasn't saved, please try again. Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 }
