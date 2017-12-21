@@ -24,34 +24,35 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:textSize="40dp"
-            android:text="Choose Image" />
+            android:text="@string/choose_image" />
 
         <Button
             android:layout_margin="@dimen/margin_large"
-            android:id="@+id/button2"
+            android:id="@+id/galleryImageButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Gallery" />
+            android:text="@string/gallery" />
 
         <Button
             android:layout_margin="@dimen/margin_large"
-            android:id="@+id/button3"
+            android:id="@+id/databaseImageButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Database" />
+            android:text="@string/database" />
 
         <Button
             android:layout_margin="@dimen/margin_large"
-            android:id="@+id/button4"
+            android:id="@+id/cameraImageButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Camera" />
+            android:text="@string/camera" />
 
         <Button
             android:layout_margin="@dimen/margin_large"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Empty" />
+            android:id="@+id/emptyImageButton"
+            android:text="@string/empty" />
 
     </LinearLayout>
 
