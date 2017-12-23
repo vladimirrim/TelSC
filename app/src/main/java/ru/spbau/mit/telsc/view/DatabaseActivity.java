@@ -27,5 +27,10 @@ public class DatabaseActivity extends AppCompatActivity {
             intent.putExtra("stickerName", stickerName);
             startActivity(intent);
         });
+
+        findViewById(R.id.browseAll).setOnClickListener(view -> {
+            Intent intent = new Intent(this, BrowseAllActivity.class);
+            startActivity(intent);
+        });
     }
 }
