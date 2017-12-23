@@ -64,8 +64,8 @@ public class TelegramManager extends DefaultAbsSender {
         manager.sendMessage(message);
     }
 
-    private TelegramApi api = new TelegramApi(new MemoryApiState("149.154.167.50:443"), new AppInfo(APIID, "Android", "1.0",
-            "0.2", "en"), new ApiCallback() {
+    private TelegramApi api = new TelegramApi(new MemoryApiState("149.154.167.50:443"), new AppInfo(APIID, "TelSC", "1.0",
+            "0.3", "en"), new ApiCallback() {
         @Override
         public void onAuthCancelled(TelegramApi api) {
             Log.w(LOG, "auth cancelled");

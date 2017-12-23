@@ -10,6 +10,10 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        /* Don't forget these two lines, otherwise the app will crash! */
+        renderscriptTargetApi 23
+        renderscriptSupportModeEnabled true
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -35,8 +39,6 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
     compile "cz.msebera.android:httpclient:4.4.1.2"
-    // https://mvnrepository.com/artifact/org.jetbrains/annotations
-    compile group: 'org.jetbrains', name: 'annotations', version: '15.0'
 
     compile(
             [group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.4.1'],
@@ -49,6 +51,8 @@ dependencies {
 
     compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
 
+    /* Make sure that you are importing the latest SDK version */
+    compile 'ly.img.android:photo-editor-sdk:5.0.8'
     compile 'com.google.firebase:firebase-core:11.6.2'
     implementation 'com.google.firebase:firebase-database:11.6.2'
     compile 'com.google.firebase:firebase-storage:11.6.2'

@@ -1,11 +1,16 @@
 package ru.spbau.mit.telsc.view;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -19,9 +24,12 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+import ly.img.android.PESDK;
 import ru.spbau.mit.telsc.R;
 import ru.spbau.mit.telsc.databaseManager.DatabaseManager;
 import ru.spbau.mit.telsc.model.Sticker;
+
+import ru.spbau.mit.telsc.telegramManager.TelegramManager;
 
 public class MainActivity extends AppCompatActivity {
     private static final int PICK_IMAGE = 1;
@@ -45,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         final Button uploadStickerButton = findViewById(R.id.uploadSticker);
         uploadStickerButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, PhoneActivity.class);
-            intent.putExtra("stickerName", saveStickerInFile(sticker.getStickerImage()) );
+            intent.putExtra("stickerName", saveStickerInFile(sticker.getStickerImage()));
             startActivity(intent);
         });
 
@@ -76,9 +84,14 @@ public class MainActivity extends AppCompatActivity {
 
                 final Uri imageUri = data.getData();
 
+                Intent intent = new Intent(this, ImageEditorActivity.class);
+                //intent.putExtra("pathToImage", getRealPathFromURI(this, imageUri));
+                startActivity(intent);
                 if(imageUri == null)
                     return;
-
+}
+}
+/*
                 final InputStream imageStream = getContentResolver().openInputStream(imageUri);
                 Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
                 selectedImage = Bitmap.createScaledBitmap(selectedImage, 512, 512, false);
@@ -100,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
             } catch (FileNotFoundException e) {
                 Toast.makeText(MainActivity.this, "Technical difficulties occur.Please reload the sticker.", Toast.LENGTH_LONG).show();
             }
-        }
+        }*/
 
     }
 
@@ -118,7 +131,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return fileName;
     }
-
 
     private void updateImageView() {
         final ImageView stickerImageView = (ImageView) findViewById(R.id.stickerImageView);

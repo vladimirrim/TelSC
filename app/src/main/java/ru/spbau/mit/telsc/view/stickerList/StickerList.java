@@ -9,18 +9,20 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 import ru.spbau.mit.telsc.R;
 
 public class StickerList extends ArrayAdapter<String>{
 
     private final Activity context;
-    private final String[] web;
-    private final Bitmap[] imageId;
+    private final ArrayList<String> names;
+    private final ArrayList<Bitmap> imageId;
     public StickerList(Activity context,
-                      String[] web, Bitmap[] imageId) {
+                      ArrayList<String> web, ArrayList<Bitmap> imageId) {
         super(context, R.layout.list_single, web);
         this.context = context;
-        this.web = web;
+        this.names = web;
         this.imageId = imageId;
 
     }
@@ -31,9 +33,9 @@ public class StickerList extends ArrayAdapter<String>{
         TextView txtTitle = rowView.findViewById(R.id.txt);
 
         ImageView imageView = rowView.findViewById(R.id.img);
-        txtTitle.setText(web[position]);
+        txtTitle.setText(names.get(position));
 
-        imageView.setImageBitmap(imageId[position]);
+        imageView.setImageBitmap(imageId.get(position));
         return rowView;
     }
 }
