@@ -32,7 +32,7 @@ import ru.spbau.mit.telsc.model.Sticker;
 import ru.spbau.mit.telsc.telegramManager.TelegramManager;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int PICK_IMAGE = 1;
+    public static final int PICK_IMAGE = 1;
     private static final int IMAGE_DOWNLOADED = 2;
 
     private Sticker sticker;
@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == PICK_IMAGE) {
             try {
-                if(data == null)
+                if (data == null)
                     return;
 
                 final Uri imageUri = data.getData();
@@ -87,10 +87,12 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(this, ImageEditorActivity.class);
                 //intent.putExtra("pathToImage", getRealPathFromURI(this, imageUri));
                 startActivity(intent);
-                if(imageUri == null)
+                if (imageUri == null)
                     return;
-}
-}
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 /*
                 final InputStream imageStream = getContentResolver().openInputStream(imageUri);
                 Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);

@@ -12,7 +12,7 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Intent intent = new Intent(this, ChooseImage.class);
+        Intent intent = new Intent(this, ChooseImageActivity.class);
         startActivity(intent);
         finish();
     }
