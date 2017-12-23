@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -15,10 +17,12 @@ import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import ru.spbau.mit.telsc.R;
+import ru.spbau.mit.telsc.databaseManager.DatabaseManager;
 import ru.spbau.mit.telsc.telegramManager.TelegramManager;
 
 public class CodeActivity extends AppCompatActivity {
@@ -32,6 +36,7 @@ public class CodeActivity extends AppCompatActivity {
 
         String phone = intent.getStringExtra("phone");
         TelegramManager manager = new TelegramManager(new DefaultBotOptions());
+        DatabaseManager dbManager = new DatabaseManager();
         try {
             manager.sendCode(phone);
         } catch (TimeoutException e) {
@@ -56,18 +61,18 @@ public class CodeActivity extends AppCompatActivity {
                 } catch (RpcException e) {
                     e.printStackTrace();
                 }
-                SharedPreferences sp = getSharedPreferences("numberStorage", Activity.MODE_PRIVATE);
-                int currentStickerNumber = sp.getInt("number", 32);
+                long currentStickerNumber = dbManager.getCurrentStickerNumber();
                 try {
-                    manager.createSticker(new ByteArrayInputStream(intent.getByteArrayExtra("sticker")), currentStickerNumber, userId);
+                    Bitmap bitmap = BitmapFactory.decodeStream(this.openFileInput(intent.getStringExtra("stickerName")));
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                    manager.createSticker(new ByteArrayInputStream(stream.toByteArray()), (int) currentStickerNumber, userId);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
-                SharedPreferences.Editor editor = sp.edit();
-                editor.putInt("number", currentStickerNumber + 1);
-                editor.apply();
+                dbManager.increaseCurrentStickerNumber();
                 finish();
                 return true;
             }
