@@ -23,4 +23,6 @@
     <string name="empty">Empty</string>
     <string name="camera">Camera</string>
     <string name="gallery">Gallery</string>
+    <string name="title_activity_browse_all">BrowseAllActivity</string>
+    <string name="action_settings">Settings</string>
 </resources>

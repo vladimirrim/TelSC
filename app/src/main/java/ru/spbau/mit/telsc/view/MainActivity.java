@@ -33,6 +33,7 @@ import ru.spbau.mit.telsc.telegramManager.TelegramManager;
 
 public class MainActivity extends AppCompatActivity {
     public static final int PICK_IMAGE = 1;
+    private static final int IMAGE_DOWNLOADED = 2;
 
     private Sticker sticker;
     private ArrayList<Sticker.Actions> savedTemplate;
@@ -41,8 +42,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        final Button chooseImageButton = (Button) findViewById(R.id.selectImage);
+        final Button chooseImageButton = findViewById(R.id.selectImage);
         chooseImageButton.setOnClickListener(v -> {
 
             Intent intent = new Intent(Intent.ACTION_PICK);
@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
         });
 
-        final Button uploadStickerButton = (Button) findViewById(R.id.uploadSticker);
+        final Button uploadStickerButton = findViewById(R.id.uploadSticker);
         uploadStickerButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, PhoneActivity.class);
             intent.putExtra("stickerName", saveStickerInFile(sticker.getStickerImage()));
@@ -61,24 +61,14 @@ public class MainActivity extends AppCompatActivity {
         stickersDatabaseButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, DatabaseActivity.class);
             intent.putExtra("stickerName", saveStickerInFile(sticker.getStickerImage()));
-            startActivity(intent);
+            startActivityForResult(intent, IMAGE_DOWNLOADED);
         });
 
-        final Button grayScalingFilter = (Button) findViewById(R.id.edit);
+        final Button grayScalingFilter = findViewById(R.id.edit);
         grayScalingFilter.setOnClickListener(this::showPopupMenu);
 
-        DatabaseManager db = new DatabaseManager();
-
-        final Button templatesDatabase = (Button) findViewById(R.id.templatesDatabase);
+        final Button templatesDatabase = findViewById(R.id.templatesDatabase);
         templatesDatabase.setOnClickListener(v -> {
-            try {
-                Bitmap bitmap = BitmapFactory.decodeStream(this.openFileInput("newSticker"));
-                final ImageView stickerImageView = findViewById(R.id.stickerImageView);
-                stickerImageView.setImageBitmap(bitmap);
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
                 /*savedTemplate = sticker.getTemplate()*/
         });
     }
@@ -89,12 +79,21 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == PICK_IMAGE) {
             try {
+                if (data == null)
+                    return;
+
                 final Uri imageUri = data.getData();
 
                 Intent intent = new Intent(this, ImageEditorActivity.class);
                 //intent.putExtra("pathToImage", getRealPathFromURI(this, imageUri));
                 startActivity(intent);
-
+                if (imageUri == null)
+                    return;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+/*
                 final InputStream imageStream = getContentResolver().openInputStream(imageUri);
                 Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
                 selectedImage = Bitmap.createScaledBitmap(selectedImage, 512, 512, false);
@@ -105,9 +104,18 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Something went wrong", Toast.LENGTH_LONG).show();
             }
 
-        } else {
-            Toast.makeText(MainActivity.this, "You haven't picked Image", Toast.LENGTH_LONG).show();
         }
+
+        if (requestCode == IMAGE_DOWNLOADED){
+            try {
+                Bitmap bitmap = BitmapFactory.decodeStream(this.openFileInput("newSticker"));
+                final ImageView stickerImageView = findViewById(R.id.stickerImageView);
+                stickerImageView.setImageBitmap(bitmap);
+
+            } catch (FileNotFoundException e) {
+                Toast.makeText(MainActivity.this, "Technical difficulties occur.Please reload the sticker.", Toast.LENGTH_LONG).show();
+            }
+        }*/
 
     }
 
@@ -118,7 +126,6 @@ public class MainActivity extends AppCompatActivity {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
             FileOutputStream fo = openFileOutput(fileName, Context.MODE_PRIVATE);
             fo.write(bytes.toByteArray());
-            // remember close file output
             fo.close();
         } catch (Exception e) {
             e.printStackTrace();
