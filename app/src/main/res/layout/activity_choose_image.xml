@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="ru.spbau.mit.telsc.view.ChooseImage">
+    tools:context="ru.spbau.mit.telsc.view.ChooseImageActivity">
 
     <LinearLayout
         android:layout_width="368dp"
