@@ -100,7 +100,7 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
                 case SAVE_STICKER_TO_PHONE:
                     if (resultPath != null) {
                         // Add result file to Gallery
-                        galleryAddPic(resultPath, UUID.randomUUID().toString(), "saved image from editor");
+                        sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(resultPath))));
                     }
                     break;
                 default:
@@ -133,17 +133,18 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
     }
 
     private void galleryAddPic(String currentPhotoPath, String name, String description) {
-        /*
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         File f = new File(currentPhotoPath);
         Uri contentUri = Uri.fromFile(f);
         mediaScanIntent.setData(contentUri);
         this.sendBroadcast(mediaScanIntent);
-        */
+
+        /*
         try {
             MediaStore.Images.Media.insertImage(getContentResolver(), currentPhotoPath, name, description);
         } catch (FileNotFoundException e) {
             Toast.makeText(PESDK.getAppContext(), "File not found, image wasn't saved, please try again. Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
+        */
     }
 }

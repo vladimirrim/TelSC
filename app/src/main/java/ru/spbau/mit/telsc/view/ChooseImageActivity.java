@@ -79,8 +79,7 @@ public class ChooseImageActivity extends AppCompatActivity {
         chooseImageButton.setOnClickListener((View v) -> {
             Intent intent = new Intent(this, ImageEditorActivity.class);
             intent.putExtra("pathToImage",
-                    Sticker.saveStickerInFile(Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888),
-                            this));
+                    Sticker.getEmptySticker(this));
             startActivity(intent);
         });
     }
