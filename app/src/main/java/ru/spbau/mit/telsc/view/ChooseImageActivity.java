@@ -14,7 +14,7 @@ import ru.spbau.mit.telsc.model.Sticker;
 
 import static ru.spbau.mit.telsc.view.MainActivity.PICK_IMAGE;
 
-public class ChooseImage extends AppCompatActivity {
+public class ChooseImageActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -29,7 +29,7 @@
         <activity android:name=".view.StickerNameDownloadActivity" />
         <activity android:name=".view.DatabaseActivity" />
         <activity android:name=".view.StickerNameUploadActivity" />
-        <activity android:name=".view.ChooseImage">
+        <activity android:name=".view.ChooseImageActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
