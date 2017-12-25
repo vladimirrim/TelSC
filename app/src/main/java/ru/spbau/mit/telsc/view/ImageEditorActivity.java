@@ -37,14 +37,14 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
     /*
      * Delete this function, just for testing, while Vova's db isn't working.
      */
-    void uploadTemplate(byte[] bytes, String templateName) throws IOException {
+    private void uploadTemplate(byte[] bytes, String templateName) throws IOException {
         FileUtils.writeByteArrayToFile(new File(Environment.getExternalStorageDirectory(), templateName), bytes);
     }
 
     /*
      * Delete this function, just for testing, while Vova's db isn't working.
      */
-    byte[] downloadTemplate(String templateName) throws IOException {
+    private byte[] downloadTemplate(String templateName) throws IOException {
         return FileUtils.readFileToByteArray(new File(Environment.getExternalStorageDirectory(), templateName));
     }
 
