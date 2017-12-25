@@ -58,16 +58,19 @@ public class TelSCImgLyTitleBar extends ImgLyTitleBar {
         uploadTemplateButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // TODO: upload sticker template to database button is pressed, realize logic
+                ImageEditorActivity.buttonType = ImageEditorActivity.ButtonType.UPLOAD_TEMPLATE_TO_DB;
+                findViewById(R.id.acceptButton).callOnClick();
             }
         });
     }
-
 
     private void setDownloadTemplateButtonOnClickListener() {
         final ImageButton downloadTemplateButton = findViewById(R.id.downloadTemplate);
         downloadTemplateButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // TODO: download sticker template to database button is pressed, realize logic
+                ImageEditorActivity.buttonType = ImageEditorActivity.ButtonType.DOWNLOAD_TEMPLATE_FROM_DB;
+                findViewById(R.id.acceptButton).callOnClick();
             }
         });
     }
