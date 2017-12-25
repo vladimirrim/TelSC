@@ -1,15 +1,18 @@
 package ru.spbau.mit.telsc.view;
 
 import android.content.Intent;
-import android.net.Uri;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.UUID;
 
 import ly.img.android.PESDK;
@@ -18,6 +21,8 @@ import ly.img.android.sdk.models.state.CameraSettings;
 import ly.img.android.sdk.models.state.EditorLoadSettings;
 import ly.img.android.sdk.models.state.EditorSaveSettings;
 import ly.img.android.sdk.models.state.manager.SettingsList;
+import ly.img.android.serializer._3._0._0.PESDKFileReader;
+import ly.img.android.serializer._3._0._0.PESDKFileWriter;
 import ly.img.android.ui.activities.CameraPreviewBuilder;
 import ly.img.android.ui.activities.ImgLyIntent;
 import ly.img.android.ui.activities.PhotoEditorBuilder;
@@ -25,12 +30,30 @@ import ly.img.android.ui.utilities.PermissionRequest;
 import ru.spbau.mit.telsc.R;
 import ru.spbau.mit.telsc.model.Sticker;
 
+// TODO: fix bug: after long usage editor loads only part of image, but in fact it isn't broken.
+
 public class ImageEditorActivity extends AppCompatActivity implements PermissionRequest.Response {
 
+    /*
+     * Delete this function, just for testing, while Vova's db isn't working.
+     */
+    void uploadTemplate(byte[] bytes, String templateName) throws IOException {
+        FileUtils.writeByteArrayToFile(new File(Environment.getExternalStorageDirectory(), templateName), bytes);
+    }
+
+    /*
+     * Delete this function, just for testing, while Vova's db isn't working.
+     */
+    byte[] downloadTemplate(String templateName) throws IOException {
+        return FileUtils.readFileToByteArray(new File(Environment.getExternalStorageDirectory(), templateName));
+    }
+
     private static final String FOLDER = "TelSC";
-    public static int CAMERA_PREVIEW_RESULT = 1;
+    private String currentImagePath;
+    public static int EDITOR_RESULT = 1;
     public enum ButtonType {
-        SAVE_STICKER_TO_PHONE, UPLOAD_STICKER_TO_TELEGRAM, UPLOAD_STICKER_TO_DB
+        SAVE_STICKER_TO_PHONE, UPLOAD_STICKER_TO_TELEGRAM, UPLOAD_STICKER_TO_DB,
+        UPLOAD_TEMPLATE_TO_DB, DOWNLOAD_TEMPLATE_FROM_DB
     }
     public static ButtonType buttonType = ButtonType.SAVE_STICKER_TO_PHONE;
 
@@ -41,47 +64,34 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
 
         Intent intent = getIntent();
 
-        SettingsList settingsList = new SettingsList();
         if (intent.hasExtra("pathToImage")) {
-            String myPicture = intent.getStringExtra("pathToImage");
+            currentImagePath = intent.getStringExtra("pathToImage");
+        }
 
-            settingsList
-                    .getSettingsModel(EditorLoadSettings.class)
-                    .setImageSourcePath(myPicture, true); // Load with delete protection true!
-        }
-        else {
-            settingsList
-                    .getSettingsModel(CameraSettings.class)
-                    .setExportDir(Directory.DCIM, FOLDER)
-                    .setExportPrefix("camera_");
-        }
-        settingsList
-                .getSettingsModel(EditorSaveSettings.class)
-                .setExportDir(Directory.DCIM, FOLDER)
-                .setExportPrefix("result_")
-                .setJpegQuality(80, false)
-                .setSavePolicy(
-                        EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT
-                );
-        if (intent.hasExtra("pathToImage")) {
-            new PhotoEditorBuilder(this)
-                    .setSettingsList(settingsList)
-                    .startActivityForResult(this, CAMERA_PREVIEW_RESULT);
-        }
-        else {
+        SettingsList settingsList = getInitializeSettingsList(currentImagePath == null);
+
+        if (currentImagePath == null) {
             new CameraPreviewBuilder(this)
                     .setSettingsList(settingsList)
-                    .startActivityForResult(this, CAMERA_PREVIEW_RESULT);
+                    .startActivityForResult(this, EDITOR_RESULT);
+        }
+        else {
+            PhotoEditorBuilder photoEditorBuilder = new PhotoEditorBuilder(this);
+            photoEditorBuilder
+                    .setSettingsList(settingsList)
+                    .startActivityForResult(this, EDITOR_RESULT);
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+        byte[] currentEditorSettings = null;
+        String templateName = "template.pesdk";
+        String resultPath = null;
 
-        if (resultCode == RESULT_OK && requestCode == CAMERA_PREVIEW_RESULT) {
-            String resultPath = data.getStringExtra(ImgLyIntent.RESULT_IMAGE_PATH);
-            String sourcePath = data.getStringExtra(ImgLyIntent.SOURCE_IMAGE_PATH);
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && requestCode == EDITOR_RESULT) {
+            resultPath = data.getStringExtra(ImgLyIntent.RESULT_IMAGE_PATH);
 
             switch (buttonType) {
                 case UPLOAD_STICKER_TO_TELEGRAM:
@@ -100,18 +110,86 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
                 case SAVE_STICKER_TO_PHONE:
                     if (resultPath != null) {
                         // Add result file to Gallery
-                        sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(resultPath))));
+                        galleryAddPic(resultPath, UUID.randomUUID().toString(), "saved image from editor");
                     }
+                    break;
+                case UPLOAD_TEMPLATE_TO_DB:
+                    SettingsList settingsList = data.getParcelableExtra(ImgLyIntent.SETTINGS_LIST);
+                    PESDKFileWriter writer = new PESDKFileWriter(settingsList);
+
+                    try {
+                        currentEditorSettings = writer.writeJsonAsBytes();
+                    } catch (IOException e) {
+                        Toast.makeText(PESDK.getAppContext(), "Error during creating template:\n" + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        e.printStackTrace();
+
+                        currentEditorSettings = null;
+                    }
+
+                    // TODO: Vova call your activity for result or call popup window where you enter template name. I'd prefer popup menu.
+
+                    try {
+                        uploadTemplate(currentEditorSettings, templateName);
+                    } catch (IOException e) {
+                        Toast.makeText(PESDK.getAppContext(), "Error during uploading template:\n" + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        e.printStackTrace();
+                    }
+
+                    break;
+                case DOWNLOAD_TEMPLATE_FROM_DB:
                     break;
                 default:
                     throw new IllegalArgumentException();
             }
-            buttonType = ButtonType.SAVE_STICKER_TO_PHONE;
-        } else if (resultCode == RESULT_CANCELED && requestCode == CAMERA_PREVIEW_RESULT && data != null) {
+        } else if (resultCode == RESULT_CANCELED && requestCode == EDITOR_RESULT && data != null) {
             String sourcePath = data.getStringExtra(ImgLyIntent.SOURCE_IMAGE_PATH);
             Toast.makeText(PESDK.getAppContext(), "Editor canceled, sourceType image is:\n" + sourcePath, Toast.LENGTH_LONG).show();
         }
-        finish();
+
+        /* Restore editor or not */
+        // TODO: Check if this code could be transferred into switch above. Doubts are because of multithreading: finish and restoreEditor kills and calls activity.
+        ButtonType currentButtonType = buttonType;
+        buttonType = ButtonType.SAVE_STICKER_TO_PHONE;
+        if (currentButtonType != ButtonType.UPLOAD_TEMPLATE_TO_DB && currentButtonType != ButtonType.DOWNLOAD_TEMPLATE_FROM_DB) {
+            finish();
+        }
+        else if (currentButtonType == ButtonType.UPLOAD_TEMPLATE_TO_DB) {
+            if (currentEditorSettings != null)
+                restoreEditor(currentEditorSettings);
+        }
+        else {
+            try {
+                // TODO: Vova call your activity for result or call popup window where you choose template to download. I'd prefer popup menu.
+                applySettingsToImage(downloadTemplate(templateName), resultPath);
+            } catch (IOException e) {
+                Toast.makeText(PESDK.getAppContext(), "Error during downloading template: \n" + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void restoreEditor(byte[] settingsToRestore) {
+        applySettingsToImage(settingsToRestore, currentImagePath);
+    }
+
+    private void applySettingsToImage(byte[] settings, String newImagePath) {
+        currentImagePath = newImagePath;
+
+        SettingsList settingsList = getInitializeSettingsList(false);
+
+        PESDKFileReader reader = new PESDKFileReader(settingsList);
+        try {
+            reader.readJson(settings);
+        } catch (IOException e) {
+            Toast.makeText(this, "Error while opening json:" + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+            finish();
+            return;
+        }
+
+        new PhotoEditorBuilder(this)
+                .setSettingsList(settingsList)
+                .startActivityForResult(this, EDITOR_RESULT);
     }
 
     // Important permission request for Android 6.0 and above, don't forget this!
@@ -133,18 +211,42 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
     }
 
     private void galleryAddPic(String currentPhotoPath, String name, String description) {
+        /*
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         File f = new File(currentPhotoPath);
         Uri contentUri = Uri.fromFile(f);
         mediaScanIntent.setData(contentUri);
         this.sendBroadcast(mediaScanIntent);
-
-        /*
+        */
         try {
             MediaStore.Images.Media.insertImage(getContentResolver(), currentPhotoPath, name, description);
         } catch (FileNotFoundException e) {
             Toast.makeText(PESDK.getAppContext(), "File not found, image wasn't saved, please try again. Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
-        */
+    }
+
+    private SettingsList getInitializeSettingsList(boolean takePictureFromCamera) {
+        SettingsList settingsList = new SettingsList();
+
+        if (takePictureFromCamera) {
+            settingsList
+                    .getSettingsModel(CameraSettings.class)
+                    .setExportDir(Directory.DCIM, FOLDER)
+                    .setExportPrefix("camera_");
+        }
+        else {
+            settingsList
+                    .getSettingsModel(EditorLoadSettings.class)
+                    .setImageSourcePath(currentImagePath, true);
+        }
+
+        settingsList
+                .getSettingsModel(EditorSaveSettings.class)
+                .setExportDir(Directory.DCIM, FOLDER)
+                .setExportPrefix("result_")
+                .setJpegQuality(80, true)
+                .setSavePolicy(EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT);
+
+        return settingsList;
     }
 }
