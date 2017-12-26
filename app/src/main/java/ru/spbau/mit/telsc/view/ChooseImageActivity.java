@@ -56,13 +56,8 @@ public class ChooseImageActivity extends AppCompatActivity {
     private void setDatabaseOnClickListener() {
         final Button chooseImageButton = findViewById(R.id.databaseImageButton);
         chooseImageButton.setOnClickListener((View v) -> {
-            // TODO: run database activity to select image.
-            /*
-              Vova, if you have problems because db downloads in other thread
-              then in this onclicklistener just call download method and pass it your function
-              which will start ImageEditorActivity with downloaded image.
-              Is it realizable?
-             */
+            Intent intent = new Intent(this, StickerNameDownloadActivity.class);
+            startActivity(intent);
         });
     }
 

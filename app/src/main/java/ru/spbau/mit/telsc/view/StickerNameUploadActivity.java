@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -22,18 +23,19 @@ public class StickerNameUploadActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         DatabaseManager dbManager = new DatabaseManager();
-        try {
-            Bitmap bitmap = BitmapFactory.decodeStream(this.openFileInput(intent.getStringExtra("stickerName")));
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            byte[] sticker = stream.toByteArray();
-            findViewById(R.id.downloadFromDB).setOnClickListener(view -> {
+        findViewById(R.id.downloadFromDB).setOnClickListener(view -> {
+            try {
+                Bitmap bitmap = BitmapFactory.decodeStream(this.openFileInput(intent.getStringExtra("stickerName")));
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                byte[] sticker = stream.toByteArray();
                 TextView name = findViewById(R.id.stickerName);
-                dbManager.uploadSticker(sticker, name.getText().toString());
+                dbManager.uploadSticker(this, sticker, name.getText().toString());
                 finish();
-            });
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+            } catch (FileNotFoundException e) {
+                Toast.makeText(this, "Error occurred during uploading sticker to database. Reason: "
+                        + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

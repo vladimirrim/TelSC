@@ -29,6 +29,7 @@ public class Sticker {
     public enum Actions {
         GRAY_SCALING, ROTATION_90_DEGREES_CLOCKWISE
     }
+
     private Map<Actions, Runnable> methodsByStringAction;
 
     private StickerManager stickerManager;
@@ -85,6 +86,27 @@ public class Sticker {
 
     public static String getEmptySticker(Context context) {
         Bitmap bitmap = getTransparentBitmap();
+        return saveStickerInCache(bitmap, context);
+    }
+
+    public static String saveStickerInFile(Bitmap bitmap, Context context) {
+        String fileName = STICKER_FILENAME_TO_SAVE_IN_CACHE;
+        try {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, bytes);
+            FileOutputStream fo = context.openFileOutput(fileName, Context.MODE_PRIVATE);
+            fo.write(bytes.toByteArray());
+            fo.close();
+        } catch (Exception e) {
+            Toast.makeText(context, "Error occurred during saving sticker to file. Reason: "
+                    + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            fileName = null;
+        }
+
+        return fileName;
+    }
+
+    public static String saveStickerInCache(Bitmap bitmap, Context context) {
         File savedSticker = null;
 
         try {
@@ -93,7 +115,6 @@ public class Sticker {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, bytes);
             FileOutputStream fo = new FileOutputStream(savedSticker);
             fo.write(bytes.toByteArray());
-            // remember close file output
             fo.close();
         } catch (IOException e) {
             Toast.makeText(context, "Error occurred during saving sticker to temporary file in cache. Reason: "
@@ -106,24 +127,8 @@ public class Sticker {
         return savedSticker.getAbsolutePath();
     }
 
-    public static String saveStickerInFile(Bitmap bitmap, Context context) {
-        String fileName = "sticker";
-        try {
-            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, bytes);
-            FileOutputStream fo = context.openFileOutput(fileName, Context.MODE_PRIVATE);
-            fo.write(bytes.toByteArray());
-            fo.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            fileName = null;
-        }
-
-        return fileName;
-    }
-
     public static byte[] getRawData(ImageView imageView) {
-        Bitmap image = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
+        Bitmap image = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
         //image = Bitmap.createScaledBitmap(image, 512, 512, false);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         image.compress(Bitmap.CompressFormat.PNG, 100, stream);
@@ -131,7 +136,7 @@ public class Sticker {
     }
 
     public static Bitmap getStickerBitmap(ImageView imageView) {
-        Bitmap image = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
+        Bitmap image = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
         return Bitmap.createScaledBitmap(image, 512, 512, false);
     }
 
