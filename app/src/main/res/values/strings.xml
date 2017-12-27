@@ -14,4 +14,21 @@
     <string name="select_image">Select Image</string>
     <string name="edit">Edit</string>
     <string name="upload">Upload</string>
+    <string name="upload_sticker_to_telegram">Upload Sticker To Telegram</string>
+    <string name="save_sticker_to_database">Save Sticker to Database</string>
+    <string name="download_template_from_database">Download Template from Database</string>
+    <string name="upload_template_to_database">Upload Template to Database</string>
+    <string name="choose_image">Choose Image</string>
+    <string name="database">Database</string>
+    <string name="empty">Empty</string>
+    <string name="camera">Camera</string>
+    <string name="gallery">Gallery</string>
+    <string name="title_activity_browse_all">BrowseAllActivity</string>
+    <string name="action_settings">Settings</string>
+    <string name="sticker_download_hint">Enter the name of the sticker</string>
+    <string name="sticker_upload_hint">Choose the name for your sticker</string>
+    <string name="upload_button_text">Upload to database</string>
+    <string name="download_button_text">Download from database</string>
+    <string name="template_download_hint">Enter the name of the template</string>
+    <string name="template_upload_hint">Choose the name for your template</string>
 </resources>

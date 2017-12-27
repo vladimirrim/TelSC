@@ -19,6 +19,6 @@ public class Crop extends StickerCommand {
 
     @Override
     public void apply() {
-        // TODO: rectangle crop, add any crop figure
+        // TODO: rectangle Crop, add any Crop figure
     }
 }

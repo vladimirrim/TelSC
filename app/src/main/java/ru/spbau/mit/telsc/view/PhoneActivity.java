@@ -1,5 +1,6 @@
 package ru.spbau.mit.telsc.view;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -24,7 +25,7 @@ public class PhoneActivity extends AppCompatActivity {
         Intent oldIntent = getIntent();
 
         Intent intent = new Intent(this, CodeActivity.class);
-        intent.putExtra("sticker", oldIntent.getByteArrayExtra("sticker"));
+        intent.putExtra("stickerName", oldIntent.getStringExtra("stickerName"));
         EditText editText = findViewById(R.id.phoneNumber);
         editText.setOnKeyListener((v, keyCode, event) -> {
             if((event.getAction()== KeyEvent.ACTION_DOWN)&&
@@ -33,6 +34,8 @@ public class PhoneActivity extends AppCompatActivity {
                 imm.hideSoftInputFromWindow(editText.getWindowToken(),0);
                 intent.putExtra("phone", editText.getText().toString());
                 startActivity(intent);
+                Intent returnIntent = new Intent();
+                setResult(Activity.RESULT_OK, returnIntent);
                 finish();
                 return true;
             }
