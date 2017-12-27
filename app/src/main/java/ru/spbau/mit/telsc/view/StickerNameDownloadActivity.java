@@ -17,7 +17,7 @@ public class StickerNameDownloadActivity extends AppCompatActivity {
         DatabaseManager dbManager = new DatabaseManager();
         findViewById(R.id.downloadFromDB).setOnClickListener(view -> {
             EditText name = findViewById(R.id.stickerName);
-            dbManager.downloadSticker(this, name.toString());
+            dbManager.downloadSticker(this, name.getText().toString());
         });
     }
 }

@@ -87,7 +87,6 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
     }
 
     private String sourcePath = "";
-    private String resultPath = "";
     private byte[] currentEditorSettings;
 
     @Override
@@ -188,6 +187,7 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
 
             } else if (currentEditorSettings == null && downloadedSettings != null) {
 
+                String resultPath = "";
                 startEditor(applySettingsToImage(resultPath, downloadedSettings));
 
             } else if (currentEditorSettings != null) {
