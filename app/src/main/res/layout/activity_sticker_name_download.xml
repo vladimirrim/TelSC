@@ -43,7 +43,7 @@
         android:layout_marginEnd="163dp"
         android:layout_marginStart="163dp"
         android:layout_marginTop="247dp"
-        android:text="Enter the name of the sticker"
+        android:hint="Enter the name of the sticker"
         app:layout_constraintBottom_toTopOf="@+id/downloadFromDB"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"

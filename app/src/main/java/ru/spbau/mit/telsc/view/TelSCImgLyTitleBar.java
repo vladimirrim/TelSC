@@ -2,20 +2,18 @@ package ru.spbau.mit.telsc.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.ImageButton;
 
 import ly.img.android.ui.widgets.ImgLyTitleBar;
 import ru.spbau.mit.telsc.R;
 
-/**
- * Created by mikhail on 18.12.17.
- */
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.*;
+
 
 public class TelSCImgLyTitleBar extends ImgLyTitleBar {
     {
-        setUploadStickerButtonOnClickListener();
         setUploadStickerToDBButtonOnClickListener();
+        setUploadStickerButtonOnClickListener();
         setUploadTemplateButtonOnClickListener();
         setDownloadTemplateButtonOnClickListener();
     }
@@ -34,44 +32,34 @@ public class TelSCImgLyTitleBar extends ImgLyTitleBar {
 
     private void setUploadStickerButtonOnClickListener() {
         final ImageButton uploadStickerButton = findViewById(R.id.uploadSticker);
-        uploadStickerButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                ImageEditorActivity.buttonType = ImageEditorActivity.ButtonType.UPLOAD_STICKER_TO_TELEGRAM;
-                findViewById(R.id.acceptButton).callOnClick();
-            }
+        uploadStickerButton.setOnClickListener(v -> {
+            ImageEditorActivity.buttonType = UPLOAD_STICKER_TO_TELEGRAM;
+            findViewById(R.id.acceptButton).callOnClick();
         });
     }
 
     private void setUploadStickerToDBButtonOnClickListener() {
         final ImageButton uploadStickerToDBButton = findViewById(R.id.uploadStickerToDB);
-        uploadStickerToDBButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                ImageEditorActivity.buttonType = ImageEditorActivity.ButtonType.UPLOAD_STICKER_TO_DB;
-                findViewById(R.id.acceptButton).callOnClick();
-            }
+        uploadStickerToDBButton.setOnClickListener(v -> {
+            ImageEditorActivity.buttonType = UPLOAD_STICKER_TO_DB;
+            findViewById(R.id.acceptButton).callOnClick();
         });
     }
 
 
     private void setUploadTemplateButtonOnClickListener() {
         final ImageButton uploadTemplateButton = findViewById(R.id.uploadTemplate);
-        uploadTemplateButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // TODO: upload sticker template to database button is pressed, realize logic
-                ImageEditorActivity.buttonType = ImageEditorActivity.ButtonType.UPLOAD_TEMPLATE_TO_DB;
-                findViewById(R.id.acceptButton).callOnClick();
-            }
+        uploadTemplateButton.setOnClickListener(v -> {
+            ImageEditorActivity.buttonType = UPLOAD_TEMPLATE_TO_DB;
+            findViewById(R.id.acceptButton).callOnClick();
         });
     }
 
     private void setDownloadTemplateButtonOnClickListener() {
         final ImageButton downloadTemplateButton = findViewById(R.id.downloadTemplate);
-        downloadTemplateButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // TODO: download sticker template to database button is pressed, realize logic
-                ImageEditorActivity.buttonType = ImageEditorActivity.ButtonType.DOWNLOAD_TEMPLATE_FROM_DB;
-                findViewById(R.id.acceptButton).callOnClick();
-            }
+        downloadTemplateButton.setOnClickListener(v -> {
+            ImageEditorActivity.buttonType = DOWNLOAD_TEMPLATE_FROM_DB;
+            findViewById(R.id.acceptButton).callOnClick();
         });
     }
 }
