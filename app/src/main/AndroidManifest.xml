@@ -22,7 +22,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".view.MainActivity" />
         <activity android:name=".view.PhoneActivity" />
         <activity android:name=".view.CodeActivity" />
         <activity android:name=".view.ImageEditorActivity" />

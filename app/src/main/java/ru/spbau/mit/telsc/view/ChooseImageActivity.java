@@ -1,20 +1,17 @@
 package ru.spbau.mit.telsc.view;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
 import ru.spbau.mit.telsc.R;
 import ru.spbau.mit.telsc.model.Sticker;
 
-import static ru.spbau.mit.telsc.view.MainActivity.PICK_IMAGE;
-
 public class ChooseImageActivity extends AppCompatActivity {
+    private static final int PICK_IMAGE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
