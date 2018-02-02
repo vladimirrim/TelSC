@@ -32,38 +32,29 @@ import ly.img.android.ui.utilities.PermissionRequest;
 import ru.spbau.mit.telsc.R;
 import ru.spbau.mit.telsc.model.Sticker;
 
-import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.*;
-
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.DOWNLOAD_TEMPLATE_FROM_DB;
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.SAVE_STICKER_TO_PHONE;
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.UPLOAD_STICKER_TO_DB;
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.UPLOAD_STICKER_TO_TELEGRAM;
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.UPLOAD_TEMPLATE_TO_DB;
 
 // TODO: fix bug: after long usage editor loads only part of image, but in fact it isn't broken.
 // TODO: check on real devices. In emulator sometimes loads not all settings in template.
 
 public class ImageEditorActivity extends AppCompatActivity implements PermissionRequest.Response {
-
     private static final String FOLDER = "TelSC";
-    public static final int EDITOR_RESULT = 1;
-    public static final int UPLOAD_TO_TELEGRAM = 2;
-    public static final int UPLOAD_TEMPLATE_TO_DATABASE = 3;
-    public static final int DOWNLOAD_TEMPLATE_FROM_DATABASE = 4;
-    public static final int UPLOAD_STICKER_TO_DATABASE = 5;
-
-
     /**
      * Used to indicate that specific button was pressed and exactly this button caused editor finishing.
      * Incorrect behaviour can happen if more than one activity run simultaneously.
      */
-
-
-    /**
-     * Describes which button was pressed.
-     */
-    public enum ButtonType {
-        SAVE_STICKER_TO_PHONE, UPLOAD_STICKER_TO_TELEGRAM, UPLOAD_STICKER_TO_DB,
-        UPLOAD_TEMPLATE_TO_DB, DOWNLOAD_TEMPLATE_FROM_DB
-    }
-
-
+    private static final int EDITOR_RESULT = 1;
+    private static final int UPLOAD_TO_TELEGRAM = 2;
+    private static final int UPLOAD_TEMPLATE_TO_DATABASE = 3;
+    private static final int DOWNLOAD_TEMPLATE_FROM_DATABASE = 4;
+    private static final int UPLOAD_STICKER_TO_DATABASE = 5;
     public static ButtonType buttonType = SAVE_STICKER_TO_PHONE;
+    private String sourcePath = "";
+    private byte[] currentEditorSettings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,9 +76,6 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
             startEditor(settingsList);
         }
     }
-
-    private String sourcePath = "";
-    private byte[] currentEditorSettings;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
@@ -342,5 +330,13 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
                 .setSavePolicy(EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT);
 
         return settingsList;
+    }
+
+    /**
+     * Describes which button was pressed.
+     */
+    public enum ButtonType {
+        SAVE_STICKER_TO_PHONE, UPLOAD_STICKER_TO_TELEGRAM, UPLOAD_STICKER_TO_DB,
+        UPLOAD_TEMPLATE_TO_DB, DOWNLOAD_TEMPLATE_FROM_DB
     }
 }
