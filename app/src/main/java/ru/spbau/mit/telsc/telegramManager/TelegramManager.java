@@ -2,14 +2,14 @@ package ru.spbau.mit.telsc.telegramManager;
 
 import android.util.Log;
 
-import org.telegram.api.auth.TLAuthorization;
-import org.telegram.api.auth.TLSentCode;
 import org.telegram.api.engine.ApiCallback;
 import org.telegram.api.engine.AppInfo;
 import org.telegram.api.engine.RpcException;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.auth.TLRequestAuthSendCode;
 import org.telegram.api.functions.auth.TLRequestAuthSignIn;
+import org.telegram.api.functions.messages.TLRequestMessagesSendMessage;
+import org.telegram.api.input.peer.TLInputPeerSelf;
 import org.telegram.api.updates.TLAbsUpdates;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.stickers.CreateNewStickerSet;
@@ -17,18 +17,18 @@ import org.telegram.telegrambots.bots.DefaultAbsSender;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
-import ru.spbau.mit.telsc.telegramManager.core.*;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeoutException;
 
+import ru.spbau.mit.telsc.telegramManager.core.MemoryApiState;
+
 
 public class TelegramManager extends DefaultAbsSender {
+
     public TelegramManager(DefaultBotOptions options) {
         super(options);
     }
-
 
     public void sendCode(String phone) throws TimeoutException, RpcException {
         TLRequestAuthSendCode code = new TLRequestAuthSendCode();
@@ -49,23 +49,30 @@ public class TelegramManager extends DefaultAbsSender {
     public void createSticker(InputStream pngSticker, int currentStickerNumber, int userId) throws IOException, TelegramApiException {
         TelegramManager manager = new TelegramManager(new DefaultBotOptions());
         CreateNewStickerSet creator = new CreateNewStickerSet();
-
-
-        creator.setPngStickerStream("stickerSet" + currentStickerNumber + "_by_StickersCreatorBot", pngSticker);
-        creator.setName("stickerSet" + currentStickerNumber + "_by_StickersCreatorBot");
+        creator.setPngStickerStream("stickerSet" + currentStickerNumber + STICKER_SET_SUFFIX, pngSticker);
+        creator.setName("stickerSet" + currentStickerNumber + STICKER_SET_SUFFIX);
         creator.setUserId(userId);
         creator.setTitle("yourStickerName");
         creator.setEmojis("\uD83D\uDE00");
         creator.setContainsMasks(false);
+
         manager.createNewStickerSet(creator);
         SendMessage message = new SendMessage();
         message.setChatId((long) userId);
-        message.setText("t.me/addstickers/" + creator.getName());
-        manager.sendMessage(message);
+        message.setText(STICKER_SET_PREFIX + creator.getName());
+        TLRequestMessagesSendMessage request = new TLRequestMessagesSendMessage();
+        request.setPeer(new TLInputPeerSelf());
+        request.setMessage(STICKER_SET_PREFIX + creator.getName());
+        request.setRandomId(-1);
+        try {
+            api.doRpcCallNonAuth(request);
+        } catch (TimeoutException e) {
+            Log.e(LOG, e.getLocalizedMessage());
+        }
     }
 
     private TelegramApi api = new TelegramApi(new MemoryApiState("149.154.167.50:443"), new AppInfo(APIID, "TelSC", "1.0",
-            "0.3", "en"), new ApiCallback() {
+            "0.5", "en"), new ApiCallback() {
         @Override
         public void onAuthCancelled(TelegramApi api) {
             Log.w(LOG, "auth cancelled");
@@ -85,6 +92,8 @@ public class TelegramManager extends DefaultAbsSender {
     private static final String LOG = "TelegramManager";
     static final private int APIID = 124211;
     static final private String APIHASH = "eab4b49dc43c47ea4feb57631a42b07d";
+    static final private String STICKER_SET_PREFIX = "t.me/addstickers/";
+    static final private String STICKER_SET_SUFFIX = "_by_StickersCreatorBot";
     private String phoneHash;
 
     @Override

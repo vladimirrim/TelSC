@@ -1,21 +1,13 @@
 package ru.spbau.mit.telsc.view;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.Environment;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import ly.img.android.PESDK;
@@ -41,7 +33,6 @@ public class TemplateNameUploadActivity extends AppCompatActivity {
             Toast.makeText(PESDK.getAppContext(),
                     "No template will be applied. Error during downloading template: \n" + e.getLocalizedMessage(),
                     Toast.LENGTH_LONG).show();
-            e.printStackTrace();
         }
     }
 }
