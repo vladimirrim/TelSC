@@ -29,10 +29,11 @@ import ru.spbau.mit.telsc.view.ImageEditorActivity;
 
 public class DatabaseManager {
     private FirebaseDatabase db = FirebaseDatabase.getInstance();
-    private FirebaseStorage storage = FirebaseStorage.getInstance();
-    private StorageReference storageRef = storage.getReference();
+    private StorageReference storageRef = FirebaseStorage.getInstance().getReference();
     private static final String STICKER_FOLDER_PREFIX = "stickers/";
     private static final String TEMPLATE_FOLDER_PREFIX = "templates/";
+    private static final String LOG = "DatabaseManager";
+    private static final int TEN_MEGABYTES = 1024 * 1024 * 10;
     private long stickerNumber;
 
     public DatabaseManager() {
@@ -48,7 +49,7 @@ public class DatabaseManager {
                 Log.e(LOG, "failed to get sticker number.");
             }
         };
-        dbReference.addValueEventListener(listener);
+        dbReference.addListenerForSingleValueEvent(listener);
     }
 
     public void uploadSticker(Activity activity, byte[] sticker, String name) {
@@ -82,7 +83,7 @@ public class DatabaseManager {
     }
 
     public void downloadSticker(Activity activity, String name) {
-        StorageReference stickerRef = FirebaseStorage.getInstance().getReference().child(STICKER_FOLDER_PREFIX + name);
+        StorageReference stickerRef = storageRef.child(STICKER_FOLDER_PREFIX + name);
 
         ProgressBar progressBar = activity.findViewById(R.id.progressBar);
 
@@ -106,7 +107,7 @@ public class DatabaseManager {
     }
 
     public void downloadTemplate(Activity activity, String name) {
-        StorageReference stickerRef = FirebaseStorage.getInstance().getReference().child(TEMPLATE_FOLDER_PREFIX + name);
+        StorageReference stickerRef = storageRef.child(TEMPLATE_FOLDER_PREFIX + name);
 
         ProgressBar progressBar = activity.findViewById(R.id.progressBar);
 
@@ -143,7 +144,4 @@ public class DatabaseManager {
         stickerNumber++;
         dbReference.setValue(stickerNumber);
     }
-
-    private static final String LOG = "DatabaseManager";
-    private static final int TEN_MEGABYTES = 1024 * 1024 * 10;
 }
