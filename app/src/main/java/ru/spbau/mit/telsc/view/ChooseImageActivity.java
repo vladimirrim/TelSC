@@ -37,10 +37,10 @@ public class ChooseImageActivity extends AppCompatActivity {
             Intent intent = new Intent(this, ImageEditorActivity.class);
             try {
                 intent.putExtra("pathToImage", getRealPathFromURI(this, imageUri));
+                startActivity(intent);
             } catch (CannotGetRealPathException e) {
                 Toast.makeText(PESDK.getAppContext(), "Cannot get filename path to chosen image\n" + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             }
-            startActivity(intent);
         }
     }
 
