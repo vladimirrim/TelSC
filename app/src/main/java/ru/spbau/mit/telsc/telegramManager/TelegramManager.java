@@ -19,6 +19,7 @@ import org.telegram.telegrambots.exceptions.TelegramApiException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
 
 import ru.spbau.mit.telsc.telegramManager.core.MemoryApiState;
@@ -63,7 +64,7 @@ public class TelegramManager extends DefaultAbsSender {
         TLRequestMessagesSendMessage request = new TLRequestMessagesSendMessage();
         request.setPeer(new TLInputPeerSelf());
         request.setMessage(STICKER_SET_PREFIX + creator.getName());
-        request.setRandomId(-1);
+        request.setRandomId(ThreadLocalRandom.current().nextInt());
         try {
             api.doRpcCallNonAuth(request);
         } catch (TimeoutException e) {
