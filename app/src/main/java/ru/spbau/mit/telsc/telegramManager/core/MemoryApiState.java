@@ -1,6 +1,9 @@
 package ru.spbau.mit.telsc.telegramManager.core;
 
 
+import android.util.SparseArray;
+import android.util.SparseBooleanArray;
+
 import org.telegram.api.TLConfig;
 import org.telegram.api.TLDcOption;
 import org.telegram.api.auth.TLAuthorization;
@@ -10,13 +13,12 @@ import org.telegram.mtproto.state.ConnectionInfo;
 import org.telegram.mtproto.state.KnownSalt;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class MemoryApiState implements AbsApiState {
 
-    private HashMap<Integer, ConnectionInfo[]> connections = new HashMap<>();
-    private HashMap<Integer, byte[]> keys = new HashMap<>();
-    private HashMap<Integer, Boolean> isAuth = new HashMap<>();
+    private SparseArray<ConnectionInfo[]> connections = new SparseArray<>();
+    private SparseArray< byte[]> keys = new SparseArray<>();
+    private SparseBooleanArray isAuth = new SparseBooleanArray();
 
     private int primaryDc = 1;
 
@@ -46,10 +48,7 @@ public class MemoryApiState implements AbsApiState {
 
     @Override
     public synchronized boolean isAuthenticated(int dcId) {
-        if (isAuth.containsKey(dcId)) {
-            return isAuth.get(dcId);
-        }
-        return false;
+        return isAuth.get(dcId) && isAuth.get(dcId);
     }
 
     @Override
@@ -60,17 +59,17 @@ public class MemoryApiState implements AbsApiState {
     @Override
     public synchronized void updateSettings(TLConfig config) {
         connections.clear();
-        HashMap<Integer, ArrayList<ConnectionInfo>> tConnections = new HashMap<>();
+        SparseArray<ArrayList<ConnectionInfo>> tConnections = new SparseArray<>();
         int id = 0;
         for (TLDcOption option : config.getDcOptions()) {
-            if (!tConnections.containsKey(option.getId())) {
+            if (tConnections.get(option.getId()) == null) {
                 tConnections.put(option.getId(), new ArrayList<>());
             }
             tConnections.get(option.getId()).add(new ConnectionInfo(id++, 0, option.getIpAddress(), option.getPort()));
         }
 
-        for (Integer dc : tConnections.keySet()) {
-            connections.put(dc, tConnections.get(dc).toArray(new ConnectionInfo[0]));
+        for (int dc =0;dc < tConnections.size();dc++) {
+            connections.put(dc, tConnections.valueAt(dc).toArray(new ConnectionInfo[0]));
         }
     }
 
@@ -86,7 +85,7 @@ public class MemoryApiState implements AbsApiState {
 
     @Override
     public synchronized ConnectionInfo[] getAvailableConnections(int dcId) {
-        if (!connections.containsKey(dcId)) {
+        if (connections.get(dcId) == null) {
             return new ConnectionInfo[0];
         }
 

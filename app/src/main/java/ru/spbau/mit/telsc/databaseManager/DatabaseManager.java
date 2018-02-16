@@ -1,15 +1,9 @@
 package ru.spbau.mit.telsc.databaseManager;
 
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
-import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -22,10 +16,8 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-
-import ru.spbau.mit.telsc.R;
-import ru.spbau.mit.telsc.model.Sticker;
-import ru.spbau.mit.telsc.view.ImageEditorActivity;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class DatabaseManager {
     private FirebaseDatabase db = FirebaseDatabase.getInstance();
@@ -52,91 +44,51 @@ public class DatabaseManager {
         dbReference.addListenerForSingleValueEvent(listener);
     }
 
-    public void uploadSticker(Activity activity, byte[] sticker, String name) {
-        upload(activity, sticker, storageRef.child(STICKER_FOLDER_PREFIX + name), name);
+    public void uploadSticker(AtomicInteger checker, byte[] sticker, String name) {
+        upload(checker, sticker, storageRef.child(STICKER_FOLDER_PREFIX + name), name);
     }
 
-    public void uploadTemplate(Activity activity, byte[] template, String name) {
-        upload(activity, template, storageRef.child(TEMPLATE_FOLDER_PREFIX + name), name);
+    public void uploadTemplate(AtomicInteger checker, byte[] template, String name) {
+        upload(checker, template, storageRef.child(TEMPLATE_FOLDER_PREFIX + name), name);
     }
 
-    private void upload(Activity activity, byte[] bytes, StorageReference ref, String name) {
-        ProgressBar progressBar = activity.findViewById(R.id.progressBar);
-        progressBar.setVisibility(View.VISIBLE);
+    private void upload(AtomicInteger checker, byte[] bytes, StorageReference ref, String name) {
         UploadTask uploadTask = ref.putBytes(bytes);
 
         uploadTask.addOnFailureListener(exception -> {
             Log.e(LOG, "failed to upload " + name);
-
-            progressBar.setVisibility(View.INVISIBLE);
-            Toast.makeText(activity, "Error occurred during uploading sticker to database. Reason: "
-                    + exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-            Intent returnIntent = new Intent();
-            activity.setResult(Activity.RESULT_OK, returnIntent);
-            activity.finish();
+            checker.set(-1);
         }).addOnSuccessListener(taskSnapshot -> {
             Log.i(LOG, "successful upload of " + name);
-
-            progressBar.setVisibility(View.INVISIBLE);
-            activity.finish();
+            checker.set(1);
         });
     }
 
-    public void downloadSticker(Activity activity, String name) {
+    public void downloadSticker(AtomicInteger checker, AtomicReference<Bitmap> bitRef, Exception exception, String name) {
         StorageReference stickerRef = storageRef.child(STICKER_FOLDER_PREFIX + name);
-
-        ProgressBar progressBar = activity.findViewById(R.id.progressBar);
-
-        progressBar.setVisibility(View.VISIBLE);
-
         stickerRef.getBytes(TEN_MEGABYTES).addOnSuccessListener(sticker -> {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(sticker, 0, sticker.length);
-
-            Intent intent = new Intent(activity, ImageEditorActivity.class);
-            try {
-                intent.putExtra("pathToImage",
-                        Sticker.saveStickerInCache(bitmap, activity));
-            } catch (IOException e) {
-                Toast.makeText(activity, "Error occurred during saving sticker to file. Reason: "
-                        + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-            }
-
-            progressBar.setVisibility(View.INVISIBLE);
-            activity.startActivity(intent);
-        }).addOnFailureListener(exception -> {
-            progressBar.setVisibility(View.INVISIBLE);
-
-            Toast.makeText(activity, "Error occurred during downloading sticker from database. Reason: "
-                    + exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            bitRef.set(BitmapFactory.decodeByteArray(sticker, 0, sticker.length));
+            checker.set(1);
+        }).addOnFailureListener(e -> {
+            checker.set(-1);
+            exception.addSuppressed(e);
         });
     }
 
-    public void downloadTemplate(Activity activity, String name) {
+    public void downloadTemplate(FileOutputStream fo, AtomicInteger checker, Exception exception, String name) {
         StorageReference stickerRef = storageRef.child(TEMPLATE_FOLDER_PREFIX + name);
-
-        ProgressBar progressBar = activity.findViewById(R.id.progressBar);
-
-        progressBar.setVisibility(View.VISIBLE);
-
         stickerRef.getBytes(TEN_MEGABYTES).addOnSuccessListener(template -> {
-            String fileName = "template";
             try {
-                FileOutputStream fo = activity.openFileOutput(fileName, Context.MODE_PRIVATE);
                 fo.write(template);
                 fo.close();
+                checker.set(1);
             } catch (IOException e) {
-                Toast.makeText(activity, "Error occurred during downloading template from database. Reason: "
-                        + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                checker.set(-1);
+                exception.addSuppressed(e);
             }
-            progressBar.setVisibility(View.INVISIBLE);
-            Intent returnIntent = new Intent();
-            activity.setResult(Activity.RESULT_OK, returnIntent);
-            activity.finish();
-        }).addOnFailureListener(exception -> {
-            progressBar.setVisibility(View.INVISIBLE);
-
-            Toast.makeText(activity, "Error occurred during downloading template from database. Reason: "
-                    + exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+        }).addOnFailureListener(e -> {
+            checker.set(-1);
+            exception.addSuppressed(e);
         });
     }
 

@@ -19,6 +19,7 @@ import org.telegram.telegrambots.exceptions.TelegramApiException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
 
 import ru.spbau.mit.telsc.telegramManager.core.MemoryApiState;
@@ -30,15 +31,15 @@ public class TelegramManager extends DefaultAbsSender {
         super(options);
     }
 
-    public void sendCode(String phone) throws TimeoutException, RpcException {
+    public String sendCode(String phone) throws TimeoutException, RpcException {
         TLRequestAuthSendCode code = new TLRequestAuthSendCode();
         code.setApiHash(APIHASH);
         code.setApiId(APIID);
         code.setPhoneNumber(phone);
-        phoneHash = api.doRpcCallNonAuth(code).getPhoneCodeHash();
+        return api.doRpcCallNonAuth(code).getPhoneCodeHash();
     }
 
-    public int auth(String phone, String smsCode) throws TimeoutException, RpcException {
+    public int auth(String phone, String smsCode, String phoneHash) throws TimeoutException, RpcException {
         TLRequestAuthSignIn sign = new TLRequestAuthSignIn();
         sign.setPhoneCode(smsCode);
         sign.setPhoneCodeHash(phoneHash);
@@ -63,7 +64,7 @@ public class TelegramManager extends DefaultAbsSender {
         TLRequestMessagesSendMessage request = new TLRequestMessagesSendMessage();
         request.setPeer(new TLInputPeerSelf());
         request.setMessage(STICKER_SET_PREFIX + creator.getName());
-        request.setRandomId(-1);
+        request.setRandomId(ThreadLocalRandom.current().nextInt());
         try {
             api.doRpcCallNonAuth(request);
         } catch (TimeoutException e) {
@@ -71,7 +72,13 @@ public class TelegramManager extends DefaultAbsSender {
         }
     }
 
-    private TelegramApi api = new TelegramApi(new MemoryApiState("149.154.167.50:443"), new AppInfo(APIID, "TelSC", "1.0",
+    private static final String LOG = "TelegramManager";
+    static final private int APIID = 124211;
+    static final private String APIHASH = "eab4b49dc43c47ea4feb57631a42b07d";
+    static final private String STICKER_SET_PREFIX = "t.me/addstickers/";
+    static final private String STICKER_SET_SUFFIX = "_by_StickersCreatorBot";
+
+    private static TelegramApi api = new TelegramApi(new MemoryApiState("149.154.167.50:443"), new AppInfo(APIID, "TelSC", "1.0",
             "0.5", "en"), new ApiCallback() {
         @Override
         public void onAuthCancelled(TelegramApi api) {
@@ -88,13 +95,6 @@ public class TelegramManager extends DefaultAbsSender {
             Log.i(LOG, "update");
         }
     });
-
-    private static final String LOG = "TelegramManager";
-    static final private int APIID = 124211;
-    static final private String APIHASH = "eab4b49dc43c47ea4feb57631a42b07d";
-    static final private String STICKER_SET_PREFIX = "t.me/addstickers/";
-    static final private String STICKER_SET_SUFFIX = "_by_StickersCreatorBot";
-    private String phoneHash;
 
     @Override
     public String getBotToken() {
