@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -57,8 +58,13 @@ public class StickerNameDownloadActivity extends AppCompatActivity {
                         + exception.getSuppressed()[0].getLocalizedMessage(), Toast.LENGTH_LONG).show();
             } else {
                 Intent intent = new Intent(StickerNameDownloadActivity.this, ImageEditorActivity.class);
-                intent.putExtra("pathToImage",
-                        Sticker.saveStickerInCache(bitRef.get(), StickerNameDownloadActivity.this));
+                try {
+                    intent.putExtra("pathToImage",
+                            Sticker.saveStickerInCache(bitRef.get(), StickerNameDownloadActivity.this));
+                } catch (IOException e) {
+                    Toast.makeText(StickerNameDownloadActivity.this, "Error occurred during saving sticker to file. Reason: "
+                            + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                }
                 startActivity(intent);
             }
         }

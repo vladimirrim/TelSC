@@ -95,14 +95,24 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
             if (buttonType == UPLOAD_STICKER_TO_DB) {
 
                 Intent intent = new Intent(this, StickerNameUploadActivity.class);
-                intent.putExtra("stickerName", Sticker.saveStickerInFile(Sticker.getStickerBitmap(resultPath),
-                        this));
+                try {
+                    intent.putExtra("stickerName", Sticker.saveStickerInFile(Sticker.getStickerBitmap(resultPath),
+                            this));
+                } catch (IOException e) {
+                    Toast.makeText(this, "Error occurred during saving sticker to file. Reason: "
+                            + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                }
                 startActivityForResult(intent, UPLOAD_STICKER_TO_DATABASE);
             }
 
             if (buttonType == UPLOAD_STICKER_TO_TELEGRAM) {
                 Intent intent = new Intent(this, PhoneActivity.class);
-                intent.putExtra("stickerName", Sticker.saveStickerInFile(Sticker.getStickerBitmap(resultPath), this));
+                try {
+                    intent.putExtra("stickerName", Sticker.saveStickerInFile(Sticker.getStickerBitmap(resultPath), this));
+                } catch (IOException e) {
+                    Toast.makeText(this, "Error occurred during saving sticker to file. Reason: "
+                            + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                }
                 startActivityForResult(intent, UPLOAD_TO_TELEGRAM);
             }
 
