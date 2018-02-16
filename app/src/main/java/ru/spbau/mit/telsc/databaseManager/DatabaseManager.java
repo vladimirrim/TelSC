@@ -93,8 +93,13 @@ public class DatabaseManager {
             Bitmap bitmap = BitmapFactory.decodeByteArray(sticker, 0, sticker.length);
 
             Intent intent = new Intent(activity, ImageEditorActivity.class);
-            intent.putExtra("pathToImage",
-                    Sticker.saveStickerInCache(bitmap, activity));
+            try {
+                intent.putExtra("pathToImage",
+                        Sticker.saveStickerInCache(bitmap, activity));
+            } catch (IOException e) {
+                Toast.makeText(activity, "Error occurred during saving sticker to file. Reason: "
+                        + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            }
 
             progressBar.setVisibility(View.INVISIBLE);
             activity.startActivity(intent);

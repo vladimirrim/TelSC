@@ -12,6 +12,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.IOException;
+
 import ly.img.android.PESDK;
 import ru.spbau.mit.telsc.R;
 import ru.spbau.mit.telsc.model.Sticker;
@@ -34,12 +36,14 @@ public class ChooseImageActivity extends AppCompatActivity {
         if (requestCode == PICK_IMAGE && resultCode == RESULT_OK) {
             final Uri imageUri = data.getData();
 
-            Intent intent = new Intent(this, ImageEditorActivity.class);
-            try {
-                intent.putExtra("pathToImage", getRealPathFromURI(this, imageUri));
+            String pathToImage = getRealPathFromURI(this, imageUri);
+            if (pathToImage != null) {
+                Intent intent = new Intent(this, ImageEditorActivity.class);
+                intent.putExtra("pathToImage", pathToImage);
                 startActivity(intent);
-            } catch (CannotGetRealPathException e) {
-                Toast.makeText(PESDK.getAppContext(), "Cannot get filename path to chosen image\n" + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            }
+            else {
+                Toast.makeText(PESDK.getAppContext(), "Cannot get filename path to chosen image\n", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -80,29 +84,31 @@ public class ChooseImageActivity extends AppCompatActivity {
         final Button chooseImageButton = findViewById(R.id.emptyImageButton);
         chooseImageButton.setOnClickListener((View v) -> {
             Intent intent = new Intent(this, ImageEditorActivity.class);
-            intent.putExtra("pathToImage",
-                    Sticker.createEmptySticker(this));
+            try {
+                intent.putExtra("pathToImage",
+                        Sticker.createEmptySticker(this));
+            } catch (IOException e) {
+                Toast.makeText(this, "Error occurred during creating empty sticker. Reason: "
+                        + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            }
             startActivity(intent);
         });
     }
 
-    private static String getRealPathFromURI(Context context, Uri contentUri) throws CannotGetRealPathException {
+    private static String getRealPathFromURI(Context context, Uri contentUri) {
         String[] data = {MediaStore.Images.Media.DATA};
 
         try (Cursor cursor = context.getContentResolver().query(contentUri, data, null, null, null)) {
             if (cursor != null) {
-                int column_index = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
+                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
                 cursor.moveToFirst();
                 return cursor.getString(column_index);
             } else {
-                throw new CannotGetRealPathException("Cannot get Cursor object from context.");
+                return null;
             }
         }
-    }
-
-    private static class CannotGetRealPathException extends Exception {
-        CannotGetRealPathException(String message) {
-            super(message);
+        catch (IllegalArgumentException e) {
+            return null;
         }
     }
 }
