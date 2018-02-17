@@ -14,6 +14,10 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
+
 import org.telegram.api.engine.RpcException;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
@@ -22,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import ru.spbau.mit.telsc.R;
 import ru.spbau.mit.telsc.databaseManager.DatabaseManager;
@@ -29,18 +34,12 @@ import ru.spbau.mit.telsc.telegramManager.TelegramManager;
 
 public class CodeActivity extends AppCompatActivity {
 
-    private String phoneHash;
+    private final AtomicBoolean isFinished = new AtomicBoolean();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_code);
-
-        Intent intent = getIntent();
-        String phone = intent.getStringExtra("phone");
-        TelegramManager manager = new TelegramManager(new DefaultBotOptions());
-        DatabaseManager dbManager = new DatabaseManager();
-        new SendCodeTask().execute(manager, phone);
 
         EditText editText = findViewById(R.id.codeNumber);
         editText.setOnKeyListener((v, keyCode, event) -> {
@@ -50,23 +49,23 @@ public class CodeActivity extends AppCompatActivity {
                 if (imm != null) {
                     imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
                 }
-                String smsCode = editText.getText().toString();
-                try {
-                    int userId = manager.auth(phone, smsCode, phoneHash);
-                    long currentStickerNumber = dbManager.getCurrentStickerNumber();
-                    Bitmap bitmap = BitmapFactory.decodeStream(openFileInput(intent.getStringExtra("stickerName")));
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                    manager.createSticker(new ByteArrayInputStream(stream.toByteArray()), (int) currentStickerNumber, userId);
-                    dbManager.increaseCurrentStickerNumber();
-                } catch (IOException | TelegramApiException e) {
-                    Toast.makeText(this, "Error occurred during sending sticker. Reason: "
-                            + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                } catch (TimeoutException e) {
-                    Toast.makeText(this, "Error occurred during signing in your account. Reason: "
-                            + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                }
-                finish();
+                ProgressBar progressBar = findViewById(R.id.progressBar);
+                progressBar.setVisibility(View.VISIBLE);
+                DatabaseManager dbManager = new DatabaseManager();
+                dbManager.downloadCurrentStickerNumber(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        progressBar.setVisibility(View.INVISIBLE);
+                        String smsCode = editText.getText().toString();
+                        new AuthTask().execute(smsCode, dbManager);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        progressBar.setVisibility(View.INVISIBLE);
+                        finish();
+                    }
+                });
                 return true;
             }
             return false;
@@ -74,13 +73,28 @@ public class CodeActivity extends AppCompatActivity {
 
     }
 
-    private class SendCodeTask extends AsyncTask<Object, Void, Long> {
+    @Override
+    public void onBackPressed() {
+        synchronized (isFinished) {
+            isFinished.set(true);
+            finish();
+        }
+    }
+
+    private class AuthTask extends AsyncTask<Object, Void, Long> {
 
         private Exception exception = null;
+        private int userId;
+        private TelegramManager manager = new TelegramManager(new DefaultBotOptions());
+        private DatabaseManager dbManager;
 
         protected Long doInBackground(Object... objs) {
             try {
-                phoneHash = ((TelegramManager) objs[0]).sendCode((String) objs[1]);
+                Intent intent = getIntent();
+                String phone = intent.getStringExtra("phone");
+                String phoneHash = intent.getStringExtra("phoneHash");
+                dbManager = (DatabaseManager) objs[1];
+                userId = manager.auth(phone, (String) objs[0], phoneHash);
             } catch (TimeoutException | RpcException e) {
                 exception = e;
             }
@@ -91,9 +105,25 @@ public class CodeActivity extends AppCompatActivity {
             ProgressBar progressBar = findViewById(R.id.progressBar);
             progressBar.setVisibility(View.INVISIBLE);
             if (exception != null) {
-                Toast.makeText(CodeActivity.this, "Error occurred during sending code. Reason: "
+                Toast.makeText(CodeActivity.this, "Error occurred during signing in your account. Reason: "
                         + exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 finish();
+            }
+            synchronized (isFinished) {
+                if (!isFinished.get()) {
+                    try {
+                        long currentStickerNumber = dbManager.getCurrentStickerNumber();
+                        Bitmap bitmap = BitmapFactory.decodeStream(openFileInput(getIntent().getStringExtra("stickerName")));
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                        manager.createSticker(new ByteArrayInputStream(stream.toByteArray()), (int) currentStickerNumber, userId);
+                        dbManager.increaseCurrentStickerNumber();
+                    } catch (IOException | TelegramApiException e) {
+                        Toast.makeText(CodeActivity.this, "Error occurred during sending sticker. Reason: "
+                                + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    }
+                    finish();
+                }
             }
         }
 

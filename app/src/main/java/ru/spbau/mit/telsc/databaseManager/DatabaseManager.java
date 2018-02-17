@@ -23,22 +23,6 @@ public class DatabaseManager {
     private static final int TEN_MEGABYTES = 1024 * 1024 * 10;
     private long stickerNumber;
 
-    public DatabaseManager() {
-        DatabaseReference dbReference = db.getReference("stickerNumber");
-        ValueEventListener listener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                stickerNumber = dataSnapshot.getValue() == null ? 0 : (Long) dataSnapshot.getValue();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.e(LOG, "failed to get sticker number.");
-            }
-        };
-        dbReference.addListenerForSingleValueEvent(listener);
-    }
-
     public void uploadSticker(OnFailureListener onFailureListener, OnSuccessListener<? super UploadTask.TaskSnapshot> onSuccessListener,
                               byte[] sticker, String name) {
         UploadTask uploadTask = storageRef.child(STICKER_FOLDER_PREFIX + name).putBytes(sticker);
@@ -61,6 +45,23 @@ public class DatabaseManager {
                                  String name) {
         StorageReference stickerRef = storageRef.child(TEMPLATE_FOLDER_PREFIX + name);
         stickerRef.getBytes(TEN_MEGABYTES).addOnSuccessListener(onSuccessListener).addOnFailureListener(onFailureListener);
+    }
+
+    public void downloadCurrentStickerNumber(ValueEventListener uiListener) {
+        DatabaseReference dbReference = db.getReference("stickerNumber");
+        ValueEventListener listener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                stickerNumber = dataSnapshot.getValue() == null ? 0 : (Long) dataSnapshot.getValue();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(LOG, "failed to get sticker number.");
+            }
+        };
+        dbReference.addListenerForSingleValueEvent(listener);
+        dbReference.addListenerForSingleValueEvent(uiListener);
     }
 
     public long getCurrentStickerNumber() {
