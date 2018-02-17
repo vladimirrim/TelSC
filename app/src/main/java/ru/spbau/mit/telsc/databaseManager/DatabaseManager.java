@@ -1,10 +1,10 @@
 package ru.spbau.mit.telsc.databaseManager;
 
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Log;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -13,11 +13,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class DatabaseManager {
     private FirebaseDatabase db = FirebaseDatabase.getInstance();
@@ -44,52 +39,28 @@ public class DatabaseManager {
         dbReference.addListenerForSingleValueEvent(listener);
     }
 
-    public void uploadSticker(AtomicInteger checker, byte[] sticker, String name) {
-        upload(checker, sticker, storageRef.child(STICKER_FOLDER_PREFIX + name), name);
+    public void uploadSticker(OnFailureListener onFailureListener, OnSuccessListener<? super UploadTask.TaskSnapshot> onSuccessListener,
+                              byte[] sticker, String name) {
+        UploadTask uploadTask = storageRef.child(STICKER_FOLDER_PREFIX + name).putBytes(sticker);
+        uploadTask.addOnFailureListener(onFailureListener).addOnSuccessListener(onSuccessListener);
     }
 
-    public void uploadTemplate(AtomicInteger checker, byte[] template, String name) {
-        upload(checker, template, storageRef.child(TEMPLATE_FOLDER_PREFIX + name), name);
+    public void uploadTemplate(OnFailureListener onFailureListener, OnSuccessListener<? super UploadTask.TaskSnapshot> onSuccessListener,
+                               byte[] template, String name) {
+        UploadTask uploadTask = storageRef.child(TEMPLATE_FOLDER_PREFIX + name).putBytes(template);
+        uploadTask.addOnFailureListener(onFailureListener).addOnSuccessListener(onSuccessListener);
     }
 
-    private void upload(AtomicInteger checker, byte[] bytes, StorageReference ref, String name) {
-        UploadTask uploadTask = ref.putBytes(bytes);
-
-        uploadTask.addOnFailureListener(exception -> {
-            Log.e(LOG, "failed to upload " + name);
-            checker.set(-1);
-        }).addOnSuccessListener(taskSnapshot -> {
-            Log.i(LOG, "successful upload of " + name);
-            checker.set(1);
-        });
-    }
-
-    public void downloadSticker(AtomicInteger checker, AtomicReference<Bitmap> bitRef, Exception exception, String name) {
+    public void downloadSticker(OnFailureListener onFailureListener, OnSuccessListener<? super byte[]> onSuccessListener,
+                                String name) {
         StorageReference stickerRef = storageRef.child(STICKER_FOLDER_PREFIX + name);
-        stickerRef.getBytes(TEN_MEGABYTES).addOnSuccessListener(sticker -> {
-            bitRef.set(BitmapFactory.decodeByteArray(sticker, 0, sticker.length));
-            checker.set(1);
-        }).addOnFailureListener(e -> {
-            checker.set(-1);
-            exception.addSuppressed(e);
-        });
+        stickerRef.getBytes(TEN_MEGABYTES).addOnSuccessListener(onSuccessListener).addOnFailureListener(onFailureListener);
     }
 
-    public void downloadTemplate(FileOutputStream fo, AtomicInteger checker, Exception exception, String name) {
+    public void downloadTemplate(OnFailureListener onFailureListener, OnSuccessListener<? super byte[]> onSuccessListener,
+                                 String name) {
         StorageReference stickerRef = storageRef.child(TEMPLATE_FOLDER_PREFIX + name);
-        stickerRef.getBytes(TEN_MEGABYTES).addOnSuccessListener(template -> {
-            try {
-                fo.write(template);
-                fo.close();
-                checker.set(1);
-            } catch (IOException e) {
-                checker.set(-1);
-                exception.addSuppressed(e);
-            }
-        }).addOnFailureListener(e -> {
-            checker.set(-1);
-            exception.addSuppressed(e);
-        });
+        stickerRef.getBytes(TEN_MEGABYTES).addOnSuccessListener(onSuccessListener).addOnFailureListener(onFailureListener);
     }
 
     public long getCurrentStickerNumber() {

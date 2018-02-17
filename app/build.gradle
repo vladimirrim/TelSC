@@ -48,6 +48,7 @@ dependencies {
         transitive = true
     }
 
+
     compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
 
     compile 'ly.img.android:photo-editor-sdk:5.0.11'
