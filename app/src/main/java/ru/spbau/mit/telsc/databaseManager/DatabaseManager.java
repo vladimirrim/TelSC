@@ -9,6 +9,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -47,20 +49,21 @@ public class DatabaseManager {
         stickerRef.getBytes(TEN_MEGABYTES).addOnSuccessListener(onSuccessListener).addOnFailureListener(onFailureListener);
     }
 
-    public void downloadCurrentStickerNumber(ValueEventListener uiListener) {
+    public void downloadAndIncreaseCurrentStickerNumber(ValueEventListener uiListener) {
         DatabaseReference dbReference = db.getReference("stickerNumber");
-        ValueEventListener listener = new ValueEventListener() {
+        dbReference.runTransaction(new Transaction.Handler() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                stickerNumber = dataSnapshot.getValue() == null ? 0 : (Long) dataSnapshot.getValue();
+            public Transaction.Result doTransaction(MutableData currentNumber) {
+                stickerNumber = currentNumber.getValue() == null ? 0 : (Long) currentNumber.getValue();
+                currentNumber.setValue(stickerNumber + 1);
+                return Transaction.success(currentNumber);
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.e(LOG, "failed to get sticker number.");
+            public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
+                Log.d(LOG, "postTransaction:onComplete:" + databaseError);
             }
-        };
-        dbReference.addListenerForSingleValueEvent(listener);
+        });
         dbReference.addListenerForSingleValueEvent(uiListener);
     }
 
@@ -68,9 +71,4 @@ public class DatabaseManager {
         return stickerNumber;
     }
 
-    public void increaseCurrentStickerNumber() {
-        DatabaseReference dbReference = db.getReference("stickerNumber");
-        stickerNumber++;
-        dbReference.setValue(stickerNumber);
-    }
 }

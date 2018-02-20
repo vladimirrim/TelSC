@@ -54,7 +54,7 @@ public class CodeActivity extends AppCompatActivity {
                 ProgressBar progressBar = findViewById(R.id.progressBar);
                 progressBar.setVisibility(View.VISIBLE);
                 DatabaseManager dbManager = new DatabaseManager();
-                dbManager.downloadCurrentStickerNumber(new ValueEventListener() {
+                dbManager.downloadAndIncreaseCurrentStickerNumber(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         progressBar.setVisibility(View.INVISIBLE);
@@ -122,7 +122,6 @@ public class CodeActivity extends AppCompatActivity {
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
                     manager.createSticker(new ByteArrayInputStream(stream.toByteArray()), (int) currentStickerNumber, userId);
-                    dbManager.increaseCurrentStickerNumber();
                 } catch (IOException | TelegramApiException e) {
                     Toast.makeText(activityRef.get(), "Error occurred during sending sticker. Reason: "
                             + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
