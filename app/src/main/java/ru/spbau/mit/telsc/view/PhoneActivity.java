@@ -76,30 +76,36 @@ public class PhoneActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(Long result) {
-            ProgressBar progressBar = activityRef.get().findViewById(R.id.progressBar);
-            progressBar.setVisibility(View.INVISIBLE);
-            if (exception != null) {
-                Toast.makeText(activityRef.get(), "Error occurred during sending code. Reason: "
-                        + exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                activityRef.get().finish();
-            }
-            if (!isFinished) {
-                Intent oldIntent = activityRef.get().getIntent();
-                Intent intent = new Intent(activityRef.get(), CodeActivity.class);
-                intent.putExtra("stickerName", oldIntent.getStringExtra("stickerName"));
-                intent.putExtra("phone", phone);
-                intent.putExtra("phoneHash", phoneHash);
-                activityRef.get().startActivity(intent);
-                Intent returnIntent = new Intent();
-                activityRef.get().setResult(Activity.RESULT_OK, returnIntent);
-                activityRef.get().finish();
+            Activity activity = activityRef.get();
+            if (activity != null) {
+                ProgressBar progressBar = activity.findViewById(R.id.progressBar);
+                progressBar.setVisibility(View.INVISIBLE);
+                if (exception != null) {
+                    Toast.makeText(activity, "Error occurred during sending code. Reason: "
+                            + exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    activity.finish();
+                }
+                if (!isFinished) {
+                    Intent oldIntent = activity.getIntent();
+                    Intent intent = new Intent(activity, CodeActivity.class);
+                    intent.putExtra("stickerName", oldIntent.getStringExtra("stickerName"));
+                    intent.putExtra("phone", phone);
+                    intent.putExtra("phoneHash", phoneHash);
+                    activity.startActivity(intent);
+                    Intent returnIntent = new Intent();
+                    activity.setResult(Activity.RESULT_OK, returnIntent);
+                    activity.finish();
+                }
             }
         }
 
         @Override
         protected void onPreExecute() {
-            ProgressBar progressBar = activityRef.get().findViewById(R.id.progressBar);
-            progressBar.setVisibility(View.VISIBLE);
+            Activity activity = activityRef.get();
+            if (activity != null) {
+                ProgressBar progressBar = activity.findViewById(R.id.progressBar);
+                progressBar.setVisibility(View.VISIBLE);
+            }
         }
     }
 }

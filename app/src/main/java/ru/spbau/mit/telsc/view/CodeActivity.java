@@ -58,7 +58,9 @@ public class CodeActivity extends AppCompatActivity {
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         progressBar.setVisibility(View.INVISIBLE);
                         String smsCode = editText.getText().toString();
-                        new AuthTask(CodeActivity.this, dbManager).execute(smsCode);
+                        Intent intent = getIntent();
+                        new AuthTask(CodeActivity.this, dbManager).execute(smsCode, intent.getStringExtra("phone"),
+                                intent.getStringExtra("phoneHash"));
                     }
 
                     @Override
@@ -80,10 +82,9 @@ public class CodeActivity extends AppCompatActivity {
         finish();
     }
 
-    private static class AuthTask extends AsyncTask<String, Void, Long> {
+    private static class AuthTask extends AsyncTask<String, Void, Integer> {
 
         private Exception exception = null;
-        private int userId;
         private TelegramManager manager = new TelegramManager(new DefaultBotOptions());
         private DatabaseManager dbManager;
         private WeakReference<Activity> activityRef;
@@ -93,46 +94,49 @@ public class CodeActivity extends AppCompatActivity {
             dbManager = dbMan;
         }
 
-        protected Long doInBackground(String... smsCode) {
+        protected Integer doInBackground(String... strings) {
             try {
-                Intent intent = activityRef.get().getIntent();
-                String phone = intent.getStringExtra("phone");
-                String phoneHash = intent.getStringExtra("phoneHash");
-                userId = manager.auth(phone, smsCode[0], phoneHash);
+                return manager.auth(strings[1], strings[0], strings[2]);
             } catch (TimeoutException | RpcException e) {
                 exception = e;
+                return 0;
             }
-            return 0L;
         }
 
-        protected void onPostExecute(Long result) {
-            ProgressBar progressBar = activityRef.get().findViewById(R.id.progressBar);
-            progressBar.setVisibility(View.INVISIBLE);
-            if (exception != null) {
-                Toast.makeText(activityRef.get(), "Error occurred during signing in your account. Reason: "
-                        + exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                activityRef.get().finish();
-            }
-            if (!isFinished) {
-                try {
-                    long currentStickerNumber = dbManager.getCurrentStickerNumber();
-                    Bitmap bitmap = BitmapFactory.decodeStream(activityRef.get().openFileInput(activityRef.get().
-                            getIntent().getStringExtra("stickerName")));
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                    manager.createSticker(new ByteArrayInputStream(stream.toByteArray()), (int) currentStickerNumber, userId);
-                } catch (IOException | TelegramApiException e) {
-                    Toast.makeText(activityRef.get(), "Error occurred during sending sticker. Reason: "
-                            + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+        protected void onPostExecute(Integer userId) {
+            Activity activity = activityRef.get();
+            if (activity != null) {
+                ProgressBar progressBar = activity.findViewById(R.id.progressBar);
+                progressBar.setVisibility(View.INVISIBLE);
+                if (exception != null) {
+                    Toast.makeText(activity, "Error occurred during signing in your account. Reason: "
+                            + exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    activity.finish();
                 }
-                activityRef.get().finish();
+                if (!isFinished) {
+                    try {
+                        long currentStickerNumber = dbManager.getCurrentStickerNumber();
+                        Bitmap bitmap = BitmapFactory.decodeStream(activity.openFileInput(activity.
+                                getIntent().getStringExtra("stickerName")));
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                        manager.createSticker(new ByteArrayInputStream(stream.toByteArray()), (int) currentStickerNumber, userId);
+                    } catch (IOException | TelegramApiException e) {
+                        Toast.makeText(activity, "Error occurred during sending sticker. Reason: "
+                                + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    }
+                    activity.finish();
+                }
             }
         }
 
         @Override
         protected void onPreExecute() {
-            ProgressBar progressBar = activityRef.get().findViewById(R.id.progressBar);
-            progressBar.setVisibility(View.VISIBLE);
+            Activity activity = activityRef.get();
+            if (activity != null) {
+                ProgressBar progressBar = activity.findViewById(R.id.progressBar);
+                progressBar.setVisibility(View.VISIBLE);
+            }
         }
     }
 }
