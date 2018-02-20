@@ -28,7 +28,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import ru.spbau.mit.telsc.R;
 import ru.spbau.mit.telsc.databaseManager.DatabaseManager;
@@ -36,7 +35,7 @@ import ru.spbau.mit.telsc.telegramManager.TelegramManager;
 
 public class CodeActivity extends AppCompatActivity {
 
-    private static final AtomicBoolean isFinished = new AtomicBoolean();
+    private static volatile boolean isFinished;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +76,7 @@ public class CodeActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        isFinished.set(true);
+        isFinished = true;
         finish();
     }
 
@@ -114,7 +113,7 @@ public class CodeActivity extends AppCompatActivity {
                         + exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 activityRef.get().finish();
             }
-            if (isFinished.compareAndSet(false, false)) {
+            if (!isFinished) {
                 try {
                     long currentStickerNumber = dbManager.getCurrentStickerNumber();
                     Bitmap bitmap = BitmapFactory.decodeStream(activityRef.get().openFileInput(activityRef.get().

@@ -18,14 +18,13 @@ import org.telegram.telegrambots.bots.DefaultBotOptions;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import ru.spbau.mit.telsc.R;
 import ru.spbau.mit.telsc.telegramManager.TelegramManager;
 
 public class PhoneActivity extends AppCompatActivity {
 
-    private static final AtomicBoolean isFinished = new AtomicBoolean();
+    private static volatile boolean isFinished;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +50,7 @@ public class PhoneActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        isFinished.set(true);
+        isFinished = true;
         finish();
     }
 
@@ -84,7 +83,7 @@ public class PhoneActivity extends AppCompatActivity {
                         + exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 activityRef.get().finish();
             }
-            if (isFinished.compareAndSet(false, false)) {
+            if (!isFinished) {
                 Intent oldIntent = activityRef.get().getIntent();
                 Intent intent = new Intent(activityRef.get(), CodeActivity.class);
                 intent.putExtra("stickerName", oldIntent.getStringExtra("stickerName"));
