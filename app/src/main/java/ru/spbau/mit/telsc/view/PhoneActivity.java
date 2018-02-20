@@ -16,6 +16,7 @@ import android.widget.Toast;
 import org.telegram.api.engine.RpcException;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 
+import java.lang.ref.WeakReference;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -24,7 +25,7 @@ import ru.spbau.mit.telsc.telegramManager.TelegramManager;
 
 public class PhoneActivity extends AppCompatActivity {
 
-    private final AtomicBoolean isFinished = new AtomicBoolean();
+    private static final AtomicBoolean isFinished = new AtomicBoolean();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +42,7 @@ public class PhoneActivity extends AppCompatActivity {
                 }
                 TelegramManager manager = new TelegramManager(new DefaultBotOptions());
                 String phone = editText.getText().toString();
-                new SendCodeTask().execute(manager, phone);
+                new SendCodeTask(PhoneActivity.this, phone).execute(manager);
                 return true;
             }
             return false;
@@ -50,22 +51,25 @@ public class PhoneActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        synchronized (isFinished) {
-            isFinished.set(true);
-            finish();
-        }
+        isFinished.set(true);
+        finish();
     }
 
-    private class SendCodeTask extends AsyncTask<Object, Void, Long> {
+    private static class SendCodeTask extends AsyncTask<TelegramManager, Void, Long> {
 
         private Exception exception = null;
         private String phone;
         private String phoneHash;
+        private WeakReference<Activity> activityRef;
 
-        protected Long doInBackground(Object... objs) {
+        private SendCodeTask(Activity activity, String phoneNumber) {
+            activityRef = new WeakReference<>(activity);
+            phone = phoneNumber;
+        }
+
+        protected Long doInBackground(TelegramManager... telManager) {
             try {
-                phone = (String) objs[1];
-                phoneHash = ((TelegramManager) objs[0]).sendCode(phone);
+                phoneHash = telManager[0].sendCode(phone);
             } catch (TimeoutException | RpcException e) {
                 exception = e;
             }
@@ -73,31 +77,29 @@ public class PhoneActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(Long result) {
-            ProgressBar progressBar = findViewById(R.id.progressBar);
+            ProgressBar progressBar = activityRef.get().findViewById(R.id.progressBar);
             progressBar.setVisibility(View.INVISIBLE);
             if (exception != null) {
-                Toast.makeText(PhoneActivity.this, "Error occurred during sending code. Reason: "
+                Toast.makeText(activityRef.get(), "Error occurred during sending code. Reason: "
                         + exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                finish();
+                activityRef.get().finish();
             }
-            synchronized (isFinished) {
-                if (!isFinished.get()) {
-                    Intent oldIntent = getIntent();
-                    Intent intent = new Intent(PhoneActivity.this, CodeActivity.class);
-                    intent.putExtra("stickerName", oldIntent.getStringExtra("stickerName"));
-                    intent.putExtra("phone", phone);
-                    intent.putExtra("phoneHash", phoneHash);
-                    startActivity(intent);
-                    Intent returnIntent = new Intent();
-                    setResult(Activity.RESULT_OK, returnIntent);
-                    finish();
-                }
+            if (isFinished.compareAndSet(false, false)) {
+                Intent oldIntent = activityRef.get().getIntent();
+                Intent intent = new Intent(activityRef.get(), CodeActivity.class);
+                intent.putExtra("stickerName", oldIntent.getStringExtra("stickerName"));
+                intent.putExtra("phone", phone);
+                intent.putExtra("phoneHash", phoneHash);
+                activityRef.get().startActivity(intent);
+                Intent returnIntent = new Intent();
+                activityRef.get().setResult(Activity.RESULT_OK, returnIntent);
+                activityRef.get().finish();
             }
         }
 
         @Override
         protected void onPreExecute() {
-            ProgressBar progressBar = findViewById(R.id.progressBar);
+            ProgressBar progressBar = activityRef.get().findViewById(R.id.progressBar);
             progressBar.setVisibility(View.VISIBLE);
         }
     }
