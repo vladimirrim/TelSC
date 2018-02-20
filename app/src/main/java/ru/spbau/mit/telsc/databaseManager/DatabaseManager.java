@@ -23,7 +23,7 @@ public class DatabaseManager {
     private static final String TEMPLATE_FOLDER_PREFIX = "templates/";
     private static final String LOG = "DatabaseManager";
     private static final int TEN_MEGABYTES = 1024 * 1024 * 10;
-    private long stickerNumber;
+    private volatile long stickerNumber;
 
     public void uploadSticker(OnFailureListener onFailureListener, OnSuccessListener<? super UploadTask.TaskSnapshot> onSuccessListener,
                               byte[] sticker, String name) {
