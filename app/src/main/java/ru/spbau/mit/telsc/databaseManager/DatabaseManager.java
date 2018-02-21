@@ -11,10 +11,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+
+import java.util.function.Consumer;
 
 public class DatabaseManager {
     private FirebaseDatabase db = FirebaseDatabase.getInstance();
@@ -49,7 +50,7 @@ public class DatabaseManager {
         stickerRef.getBytes(TEN_MEGABYTES).addOnSuccessListener(onSuccessListener).addOnFailureListener(onFailureListener);
     }
 
-    public void downloadAndIncreaseCurrentStickerNumber(ValueEventListener uiListener) {
+    public void downloadAndIncreaseCurrentStickerNumber(Consumer<Boolean> uiListener) {
         DatabaseReference dbReference = db.getReference("stickerNumber");
         dbReference.runTransaction(new Transaction.Handler() {
             @Override
@@ -61,10 +62,10 @@ public class DatabaseManager {
 
             @Override
             public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
+                uiListener.accept(b);
                 Log.d(LOG, "postTransaction:onComplete:" + databaseError);
             }
         });
-        dbReference.addListenerForSingleValueEvent(uiListener);
     }
 
     public long getCurrentStickerNumber() {

@@ -15,10 +15,6 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
-
 import org.telegram.api.engine.RpcException;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
@@ -53,18 +49,14 @@ public class CodeActivity extends AppCompatActivity {
                 ProgressBar progressBar = findViewById(R.id.progressBar);
                 progressBar.setVisibility(View.VISIBLE);
                 DatabaseManager dbManager = new DatabaseManager();
-                dbManager.downloadAndIncreaseCurrentStickerNumber(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
+                dbManager.downloadAndIncreaseCurrentStickerNumber(isDone -> {
+                    if (isDone) {
                         progressBar.setVisibility(View.INVISIBLE);
                         String smsCode = editText.getText().toString();
                         Intent intent = getIntent();
                         new AuthTask(CodeActivity.this, dbManager).execute(smsCode, intent.getStringExtra("phone"),
                                 intent.getStringExtra("phoneHash"));
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                    } else {
                         progressBar.setVisibility(View.INVISIBLE);
                         finish();
                     }
