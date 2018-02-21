@@ -7,8 +7,10 @@ import android.widget.ImageButton;
 import ly.img.android.ui.widgets.ImgLyTitleBar;
 import ru.spbau.mit.telsc.R;
 
-import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.*;
-
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.DOWNLOAD_TEMPLATE_FROM_DB;
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.UPLOAD_STICKER_TO_DB;
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.UPLOAD_STICKER_TO_TELEGRAM;
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.UPLOAD_TEMPLATE_TO_DB;
 
 public class TelSCImgLyTitleBar extends ImgLyTitleBar {
     {

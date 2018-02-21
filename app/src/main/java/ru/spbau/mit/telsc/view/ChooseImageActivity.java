@@ -1,20 +1,25 @@
 package ru.spbau.mit.telsc.view;
 
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.database.Cursor;
 import android.net.Uri;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
+import java.io.IOException;
+
+import ly.img.android.PESDK;
 import ru.spbau.mit.telsc.R;
 import ru.spbau.mit.telsc.model.Sticker;
 
-import static ru.spbau.mit.telsc.view.MainActivity.PICK_IMAGE;
-
 public class ChooseImageActivity extends AppCompatActivity {
+    private static final int PICK_IMAGE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,9 +36,15 @@ public class ChooseImageActivity extends AppCompatActivity {
         if (requestCode == PICK_IMAGE && resultCode == RESULT_OK) {
             final Uri imageUri = data.getData();
 
-            Intent intent = new Intent(this, ImageEditorActivity.class);
-            intent.putExtra("pathToImage", Application.getRealPathFromURI(this, imageUri));
-            startActivity(intent);
+            String pathToImage = getRealPathFromURI(this, imageUri);
+            if (pathToImage != null) {
+                Intent intent = new Intent(this, ImageEditorActivity.class);
+                intent.putExtra("pathToImage", pathToImage);
+                startActivity(intent);
+            }
+            else {
+                Toast.makeText(PESDK.getAppContext(), "Cannot get filename path to chosen image\n", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -73,9 +84,31 @@ public class ChooseImageActivity extends AppCompatActivity {
         final Button chooseImageButton = findViewById(R.id.emptyImageButton);
         chooseImageButton.setOnClickListener((View v) -> {
             Intent intent = new Intent(this, ImageEditorActivity.class);
-            intent.putExtra("pathToImage",
-                    Sticker.getEmptySticker(this));
+            try {
+                intent.putExtra("pathToImage",
+                        Sticker.createEmptySticker(this));
+            } catch (IOException e) {
+                Toast.makeText(this, "Error occurred during creating empty sticker. Reason: "
+                        + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            }
             startActivity(intent);
         });
+    }
+
+    private static String getRealPathFromURI(Context context, Uri contentUri) {
+        String[] data = {MediaStore.Images.Media.DATA};
+
+        try (Cursor cursor = context.getContentResolver().query(contentUri, data, null, null, null)) {
+            if (cursor != null) {
+                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                cursor.moveToFirst();
+                return cursor.getString(column_index);
+            } else {
+                return null;
+            }
+        }
+        catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

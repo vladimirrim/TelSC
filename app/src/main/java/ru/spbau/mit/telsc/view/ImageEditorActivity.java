@@ -32,38 +32,29 @@ import ly.img.android.ui.utilities.PermissionRequest;
 import ru.spbau.mit.telsc.R;
 import ru.spbau.mit.telsc.model.Sticker;
 
-import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.*;
-
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.DOWNLOAD_TEMPLATE_FROM_DB;
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.SAVE_STICKER_TO_PHONE;
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.UPLOAD_STICKER_TO_DB;
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.UPLOAD_STICKER_TO_TELEGRAM;
+import static ru.spbau.mit.telsc.view.ImageEditorActivity.ButtonType.UPLOAD_TEMPLATE_TO_DB;
 
 // TODO: fix bug: after long usage editor loads only part of image, but in fact it isn't broken.
 // TODO: check on real devices. In emulator sometimes loads not all settings in template.
 
 public class ImageEditorActivity extends AppCompatActivity implements PermissionRequest.Response {
-
     private static final String FOLDER = "TelSC";
-    public static final int EDITOR_RESULT = 1;
-    public static final int UPLOAD_TO_TELEGRAM = 2;
-    public static final int UPLOAD_TEMPLATE_TO_DATABASE = 3;
-    public static final int DOWNLOAD_TEMPLATE_FROM_DATABASE = 4;
-    public static final int UPLOAD_STICKER_TO_DATABASE = 5;
-
-
     /**
      * Used to indicate that specific button was pressed and exactly this button caused editor finishing.
      * Incorrect behaviour can happen if more than one activity run simultaneously.
      */
-
-
-    /**
-     * Describes which button was pressed.
-     */
-    public enum ButtonType {
-        SAVE_STICKER_TO_PHONE, UPLOAD_STICKER_TO_TELEGRAM, UPLOAD_STICKER_TO_DB,
-        UPLOAD_TEMPLATE_TO_DB, DOWNLOAD_TEMPLATE_FROM_DB
-    }
-
-
+    private static final int EDITOR_RESULT = 1;
+    private static final int UPLOAD_TO_TELEGRAM = 2;
+    private static final int UPLOAD_TEMPLATE_TO_DATABASE = 3;
+    private static final int DOWNLOAD_TEMPLATE_FROM_DATABASE = 4;
+    private static final int UPLOAD_STICKER_TO_DATABASE = 5;
     public static ButtonType buttonType = SAVE_STICKER_TO_PHONE;
+    private String sourcePath = "";
+    private byte[] currentEditorSettings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,9 +77,6 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
         }
     }
 
-    private String sourcePath = "";
-    private byte[] currentEditorSettings;
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -104,113 +92,128 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
                 e.printStackTrace();
             }
 
-            if (buttonType == UPLOAD_STICKER_TO_DB) {
-
-                Intent intent = new Intent(this, StickerNameUploadActivity.class);
-                intent.putExtra("stickerName", Sticker.saveStickerInFile(Sticker.getStickerBitmap(resultPath),
-                        this));
-                startActivityForResult(intent, UPLOAD_STICKER_TO_DATABASE);
+            if (buttonType == UPLOAD_STICKER_TO_TELEGRAM || buttonType == UPLOAD_STICKER_TO_DB) {
+                uploadSticker(buttonType == UPLOAD_STICKER_TO_DB, resultPath);
             }
-
-            if (buttonType == UPLOAD_STICKER_TO_TELEGRAM) {
-                Intent intent = new Intent(this, PhoneActivity.class);
-                intent.putExtra("stickerName", Sticker.saveStickerInFile(Sticker.getStickerBitmap(resultPath), this));
-                startActivityForResult(intent, UPLOAD_TO_TELEGRAM);
-            }
-
-
             if (buttonType == SAVE_STICKER_TO_PHONE) {
-
-                if (resultPath != null) {
-                    galleryAddPic(resultPath, UUID.randomUUID().toString(), "saved image from editor");
-
-                }
-
-                if (currentEditorSettings != null) {
-                    startEditor(applySettingsToImage(sourcePath, currentEditorSettings));
-                } else {
-                    finish();
-                }
+                saveStickerToPhone(resultPath);
+                restoreEditor();
             }
-
             if (buttonType == UPLOAD_TEMPLATE_TO_DB) {
-
-                if (currentEditorSettings != null) {
-                    String fileName = "template";
-                    try {
-
-                        IOUtils.write(currentEditorSettings, openFileOutput(fileName, Context.MODE_PRIVATE));
-                        Intent intent = new Intent(this, TemplateNameUploadActivity.class);
-                        intent.putExtra("templateName", "template");
-                        startActivityForResult(intent, UPLOAD_TEMPLATE_TO_DATABASE);
-
-                    } catch (IOException e) {
-                        Toast.makeText(PESDK.getAppContext(), "Error during creating template. Reason: " + e.getLocalizedMessage(),
-                                Toast.LENGTH_LONG).show();
-                    }
-
-                } else {
-                    Toast.makeText(PESDK.getAppContext(), "Error during creating template", Toast.LENGTH_LONG).show();
-                }
-
+                uploadTemplateToDB();
             }
-
             if (buttonType == DOWNLOAD_TEMPLATE_FROM_DB) {
-                Intent intent = new Intent(this, TemplateNameDownloadActivity.class);
-                startActivityForResult(intent, DOWNLOAD_TEMPLATE_FROM_DATABASE);
-                return;
+                downloadTemplateFromDB();
             }
-
-
         } else if (resultCode == RESULT_CANCELED && requestCode == EDITOR_RESULT && data != null) {
             sourcePath = data.getStringExtra(ImgLyIntent.SOURCE_IMAGE_PATH);
             Toast.makeText(PESDK.getAppContext(), "Editor canceled, sourceType image is:\n" + sourcePath, Toast.LENGTH_LONG).show();
             finish();
         }
 
-        if (requestCode == UPLOAD_TO_TELEGRAM) {
-            finish();
-        }
-
         if (requestCode == DOWNLOAD_TEMPLATE_FROM_DATABASE) {
-            byte[] downloadedSettings = null;
-            try {
-                downloadedSettings = IOUtils.toByteArray(openFileInput("template"));
-            } catch (IOException e) {
-                Toast.makeText(PESDK.getAppContext(), "No template will be applied. Error during downloading template: \n" + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                e.printStackTrace();
-            }
-
-            if (currentEditorSettings != null && downloadedSettings != null) {
-
-                startEditor(applySettingsToImage(sourcePath, currentEditorSettings, downloadedSettings));
-
-            } else if (currentEditorSettings == null && downloadedSettings != null) {
-
-                String resultPath = "";
-                startEditor(applySettingsToImage(resultPath, downloadedSettings));
-
-            } else if (currentEditorSettings != null) {
-
-                startEditor(applySettingsToImage(sourcePath, currentEditorSettings));
-
-            } else {
-                Toast.makeText(PESDK.getAppContext(), "Editor cannot be restored", Toast.LENGTH_LONG).show();
-                finish();
-            }
-
-        }
-
-        if (requestCode == UPLOAD_STICKER_TO_DATABASE || requestCode == UPLOAD_TEMPLATE_TO_DATABASE) {
-            if (currentEditorSettings != null) {
-                startEditor(applySettingsToImage(sourcePath, currentEditorSettings));
-            } else {
-                finish();
-            }
-
+            applyDownloadedTemplate();
+        } else if (requestCode == UPLOAD_TO_TELEGRAM || requestCode == UPLOAD_STICKER_TO_DATABASE
+                || requestCode == UPLOAD_TEMPLATE_TO_DATABASE) {
+            restoreEditor();
         }
 
         buttonType = SAVE_STICKER_TO_PHONE;
+    }
+
+    /**
+     * Applies downloaded template to current image.
+     */
+    private void applyDownloadedTemplate() {
+        byte[] downloadedSettings = null;
+        try {
+            downloadedSettings = IOUtils.toByteArray(openFileInput("template"));
+        } catch (IOException e) {
+            Toast.makeText(PESDK.getAppContext(), "No template will be applied. Error during downloading template: \n"
+                    + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
+
+        if (currentEditorSettings != null && downloadedSettings != null) {
+            startEditor(applySettingsToImage(sourcePath, currentEditorSettings, downloadedSettings));
+        } else if (currentEditorSettings == null && downloadedSettings != null) {
+            String resultPath = "";
+            startEditor(applySettingsToImage(resultPath, downloadedSettings));
+        } else if (currentEditorSettings != null) {
+            startEditor(applySettingsToImage(sourcePath, currentEditorSettings));
+        } else {
+            Toast.makeText(PESDK.getAppContext(), "Editor cannot be restored", Toast.LENGTH_LONG).show();
+            finish();
+        }
+    }
+
+    /**
+     * Downloads template from database.
+     */
+    private void downloadTemplateFromDB() {
+        Intent intent = new Intent(this, TemplateNameDownloadActivity.class);
+        startActivityForResult(intent, DOWNLOAD_TEMPLATE_FROM_DATABASE);
+    }
+
+    /**
+     * Uploads template to database.
+     */
+    private void uploadTemplateToDB() {
+        if (currentEditorSettings != null) {
+            String fileName = "template";
+            try {
+                IOUtils.write(currentEditorSettings, openFileOutput(fileName, Context.MODE_PRIVATE));
+                Intent intent = new Intent(this, TemplateNameUploadActivity.class);
+                intent.putExtra("templateName", "template");
+                startActivityForResult(intent, UPLOAD_TEMPLATE_TO_DATABASE);
+            } catch (IOException e) {
+                Toast.makeText(PESDK.getAppContext(), "Error during creating template. Reason: " + e.getLocalizedMessage(),
+                        Toast.LENGTH_LONG).show();
+            }
+        } else {
+            Toast.makeText(PESDK.getAppContext(), "Error during creating template", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /**
+     * Restores editor with current settings.
+     */
+    private void restoreEditor() {
+        if (currentEditorSettings != null) {
+            startEditor(applySettingsToImage(sourcePath, currentEditorSettings));
+        } else {
+            finish();
+        }
+    }
+
+    /**
+     * Saves sticker to phone and restores editor.
+     *
+     * @param resultPath path to result image.
+     */
+    private void saveStickerToPhone(String resultPath) {
+        if (resultPath != null) {
+            galleryAddPic(resultPath, UUID.randomUUID().toString(), "saved image from editor");
+        }
+    }
+
+    /**
+     * Starts uploading sticker activity to database or to telegram.
+     *
+     * @param toDatabase if true then to database otherwise to telegram.
+     * @param resultPath path to result image.
+     */
+    private void uploadSticker(boolean toDatabase, String resultPath) {
+        Intent intent = new Intent(this,
+                toDatabase ? StickerNameUploadActivity.class : PhoneActivity.class);
+        try {
+            intent.putExtra("stickerName", Sticker.saveStickerInFile(Sticker.getStickerBitmap(resultPath),
+                    this));
+        } catch (IOException e) {
+            Toast.makeText(this, "Error occurred during saving sticker to file. Reason: "
+                    + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+        }
+        startActivityForResult(intent, toDatabase ? UPLOAD_STICKER_TO_DATABASE : UPLOAD_TO_TELEGRAM);
     }
 
     /**
@@ -342,5 +345,13 @@ public class ImageEditorActivity extends AppCompatActivity implements Permission
                 .setSavePolicy(EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT);
 
         return settingsList;
+    }
+
+    /**
+     * Describes which button was pressed.
+     */
+    public enum ButtonType {
+        SAVE_STICKER_TO_PHONE, UPLOAD_STICKER_TO_TELEGRAM, UPLOAD_STICKER_TO_DB,
+        UPLOAD_TEMPLATE_TO_DB, DOWNLOAD_TEMPLATE_FROM_DB
     }
 }
